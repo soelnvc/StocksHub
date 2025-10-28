@@ -13,9 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
 import { formatCurrency } from "@/utils/currency";
+import { useSession } from "@/contexts/SessionContext"; // Import useSession
 
 const Leaderboard = () => {
   const { leaderboard, isLoading, error, fetchLeaderboard } = useLeaderboard();
+  const { user } = useSession(); // Get the current user
 
   useEffect(() => {
     fetchLeaderboard(); // Fetch on component mount
@@ -64,7 +66,10 @@ const Leaderboard = () => {
                   </TableHeader>
                   <TableBody>
                     {leaderboard.map((entry) => (
-                      <TableRow key={entry.user_id}>
+                      <TableRow
+                        key={entry.user_id}
+                        className={user && entry.user_id === user.id ? "bg-blue-100 dark:bg-blue-900" : ""}
+                      >
                         <TableCell className="font-medium">{entry.rank}</TableCell>
                         <TableCell>{entry.first_name || "Anonymous"} {entry.last_name}</TableCell>
                         <TableCell className="text-right">
