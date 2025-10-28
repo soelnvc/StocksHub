@@ -12,39 +12,41 @@ import AIMentor from "./pages/AIMentor";
 import Profile from "./pages/Profile";
 import Trade from "./pages/Trade";
 import TransactionHistory from "./pages/TransactionHistory";
-import MarketVisualization from "./pages/MarketVisualization"; // Import the new page
+import MarketVisualization from "./pages/MarketVisualization";
 import { SessionContextProvider } from "./contexts/SessionContext";
 import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <SessionContextProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/" element={<AuthGuard />}>
-              <Route index element={<Dashboard />} /> {/* Default authenticated route */}
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/ai-mentor" element={<AIMentor />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/trade" element={<Trade />} />
-              <Route path="/transactions" element={<TransactionHistory />} />
-              <Route path="/market-visualization" element={<MarketVisualization />} /> {/* New route */}
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </SessionContextProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("App component rendering"); // Added console log
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <SessionContextProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/" element={<AuthGuard />}>
+                <Route index element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/ai-mentor" element={<AIMentor />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/trade" element={<Trade />} />
+                <Route path="/transactions" element={<TransactionHistory />} />
+                <Route path="/market-visualization" element={<MarketVisualization />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SessionContextProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

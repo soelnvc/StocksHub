@@ -11,13 +11,14 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log("SessionContextProvider rendering"); // Added console log
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, currentSession) => { // Changed 'event' to '_event'
+      async (_event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user || null);
         setIsLoading(false);
