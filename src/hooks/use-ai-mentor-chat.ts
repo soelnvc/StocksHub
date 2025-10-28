@@ -59,16 +59,23 @@ export const useAIMentorChat = (): UseAIMentorChatResult => {
     setIsSending(true);
     setError(null);
 
-    // Simulate AI response for now
-    const simulatedAIResponse = `Hello ${user.user_metadata?.first_name || 'there'}! You asked: "${userMessage}". I'm currently under development, but I'm learning!`;
-
     try {
+      // First, invoke the Edge Function to get the AI response
+      const { data: edgeFunctionData, error: edgeFunctionError } = await supabase.functions.invoke('ai-mentor', {
+        body: { message: userMessage },
+      });
+
+      if (edgeFunctionError) throw edgeFunctionError;
+
+      const aiResponse = edgeFunctionData.response;
+
+      // Then, save both the user message and AI response to the database
       const { data, error: supabaseError } = await supabase
         .from("ai_mentor_chats")
         .insert({
           user_id: user.id,
           message: userMessage,
-          response: simulatedAIResponse,
+          response: aiResponse,
         })
         .select()
         .single();
