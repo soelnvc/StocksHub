@@ -12,7 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
-import { formatCurrency } from "@/utils/currency"; // Import the new utility
+import { formatCurrency } from "@/utils/currency";
 
 const Leaderboard = () => {
   const { leaderboard, isLoading, error, fetchLeaderboard } = useLeaderboard();
@@ -29,7 +29,7 @@ const Leaderboard = () => {
       <div className="flex flex-col items-center justify-center h-full text-center p-4">
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-8">Leaderboard</h1>
         <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-          See who's topping the charts with the highest virtual balance!
+          See who's topping the charts with the highest total portfolio value!
         </p>
 
         <Card className="w-full max-w-2xl bg-white dark:bg-gray-800 shadow-lg">
@@ -59,7 +59,7 @@ const Leaderboard = () => {
                     <TableRow>
                       <TableHead className="w-[60px]">Rank</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
+                      <TableHead className="text-right">Total Portfolio Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -68,7 +68,7 @@ const Leaderboard = () => {
                         <TableCell className="font-medium">{entry.rank}</TableCell>
                         <TableCell>{entry.first_name || "Anonymous"} {entry.last_name}</TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(entry.balance)}
+                          {formatCurrency(entry.total_portfolio_value)}
                         </TableCell>
                       </TableRow>
                     ))}
