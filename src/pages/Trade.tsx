@@ -8,6 +8,7 @@ import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingUp } from "lucide-react";
 import { showError } from "@/utils/toast";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 const Trade = () => {
   const [symbolInput, setSymbolInput] = useState("");
@@ -85,7 +86,7 @@ const Trade = () => {
                 <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
                   <span>Your Balance:</span>
                   <DollarSign className="h-4 w-4" />
-                  <span>{balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>{formatCurrency(balance)}</span>
                 </div>
               )}
 
@@ -113,12 +114,12 @@ const Trade = () => {
                 <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
                   <span>Current Price:</span>
                   <DollarSign className="h-4 w-4" />
-                  <span>{stockData.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>{formatCurrency(stockData.price)}</span>
                 </div>
               )}
               {currentStockHolding && (
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  You own: {currentStockHolding.quantity} shares (Avg. Buy Price: ₹{currentStockHolding.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                  You own: {currentStockHolding.quantity} shares (Avg. Buy Price: {formatCurrency(currentStockHolding.average_buy_price)})
                 </p>
               )}
 

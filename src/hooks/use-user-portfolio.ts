@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { updateGamificationOnTrade } from "@/utils/gamification";
 import { fetchStockPrice } from "@/lib/stock-api";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 interface UserStock {
   id: string;
@@ -146,7 +147,7 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
 
     const totalCost = quantity * price;
     if (balance < totalCost) {
-      showError("Insufficient funds to complete this purchase.");
+      showError(`Insufficient funds. You need ${formatCurrency(totalCost)} but only have ${formatCurrency(balance)}.`);
       return false;
     }
 

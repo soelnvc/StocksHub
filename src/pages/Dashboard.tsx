@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
@@ -97,7 +98,7 @@ const Dashboard = () => {
                 <p className="text-red-500 text-2xl font-bold">{displayError}</p>
               ) : (
                 <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                  ₹{totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalPortfolioValue)}
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -120,7 +121,7 @@ const Dashboard = () => {
                 <p className="text-red-500 text-2xl font-bold">{displayError}</p>
               ) : (
                 <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                  ₹{balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(balance)}
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -143,7 +144,7 @@ const Dashboard = () => {
                 <p className="text-red-500 text-2xl font-bold">{displayError}</p>
               ) : (
                 <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                  ₹{totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalStockValue)}
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -167,7 +168,7 @@ const Dashboard = () => {
                 <p className="text-red-500 text-2xl font-bold">{displayError}</p>
               ) : (
                 <div className={`text-4xl font-bold ${profitLossColorClass}`}>
-                  ₹{totalPortfolioProfitLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalPortfolioProfitLoss)}
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -206,7 +207,7 @@ const Dashboard = () => {
                 <Flame className="h-5 w-5 text-orange-500" />
                 <span>Trading Streak</span>
               </CardTitle>
-            </CardHeader> {/* Removed duplicate </CardTitle> */}
+            </CardHeader>
             <CardContent>
               {displayLoading ? (
                 <Skeleton className="h-10 w-1/2 mx-auto" />
@@ -260,34 +261,22 @@ const Dashboard = () => {
                           <TableCell className="font-medium">{stock.stock_symbol}</TableCell>
                           <TableCell>{stock.quantity}</TableCell>
                           <TableCell className="text-right">
-                            ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {formatCurrency(stock.average_buy_price)}
                           </TableCell>
                           <TableCell className="text-right">
                             {isLoadingPortfolio ? (
                               <Skeleton className="h-4 w-16 inline-block" />
-                            ) : stock.current_price != null ? (
-                              `₹${stock.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            ) : (
-                              "N/A"
-                            )}
+                            ) : formatCurrency(stock.current_price)}
                           </TableCell>
                           <TableCell className="text-right">
                             {isLoadingPortfolio ? (
                               <Skeleton className="h-4 w-20 inline-block" />
-                            ) : stock.current_value != null ? (
-                              `₹${stock.current_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            ) : (
-                              "N/A"
-                            )}
+                            ) : formatCurrency(stock.current_value)}
                           </TableCell>
                           <TableCell className={`text-right ${stockProfitLossColorClass}`}> {/* New P/L cell */}
                             {isLoadingPortfolio ? (
                               <Skeleton className="h-4 w-16 inline-block" />
-                            ) : stock.total_profit_loss != null ? (
-                              `₹${stock.total_profit_loss?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                            ) : (
-                              "N/A"
-                            )}
+                            ) : formatCurrency(stock.total_profit_loss)}
                           </TableCell>
                         </TableRow>
                       );

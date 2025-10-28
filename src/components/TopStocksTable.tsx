@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, ArrowDown, ArrowUp } from "lucide-react";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 interface TopStock {
   symbol: string;
@@ -68,7 +69,7 @@ const TopStocksTable: React.FC<TopStocksTableProps> = ({ topStocks, isLoading, e
                       <TableCell className="font-medium">{stock.symbol}</TableCell>
                       <TableCell>{stock.name}</TableCell>
                       <TableCell className="text-right">
-                        ₹{stock.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatCurrency(stock.price)}
                       </TableCell>
                       <TableCell className={`text-right flex items-center justify-end ${changeColorClass}`}>
                         <ChangeIcon className="h-3 w-3 mr-1" />

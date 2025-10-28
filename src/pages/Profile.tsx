@@ -21,6 +21,7 @@ import {
   DialogFooter, // Import DialogFooter
 } from "@/components/ui/dialog";
 import EditProfileForm from "@/components/EditProfileForm";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
@@ -106,7 +107,7 @@ const Profile = () => {
                   <Skeleton className="h-7 w-1/3" />
                 ) : (
                   <span>
-                    ₹{balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrency(balance)}
                   </span>
                 )}
               </div>
@@ -133,7 +134,7 @@ const Profile = () => {
 
                 <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="destructive" disabled={isResetting}>
+                    <Button variant="destructive" disabled={isLoading || isResetting}>
                       <RotateCcw className="mr-2 h-4 w-4" /> Reset Account
                     </Button>
                   </DialogTrigger>

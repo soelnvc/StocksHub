@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 const Leaderboard = () => {
   const { leaderboard, isLoading, error, fetchLeaderboard } = useLeaderboard();
@@ -67,7 +68,7 @@ const Leaderboard = () => {
                         <TableCell className="font-medium">{entry.rank}</TableCell>
                         <TableCell>{entry.first_name || "Anonymous"} {entry.last_name}</TableCell>
                         <TableCell className="text-right">
-                          ₹{entry.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatCurrency(entry.balance)}
                         </TableCell>
                       </TableRow>
                     ))}

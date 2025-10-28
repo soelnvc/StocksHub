@@ -1,4 +1,3 @@
-/// <reference lib="deno.ns" />
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -44,55 +43,61 @@ serve(async (req: Request) => {
     // Start a transaction (Supabase client doesn't directly support transactions in Edge Functions,
     // so we'll execute queries sequentially and handle errors)
 
-    // 1. Reset user balance
-    const { error: balanceError } = await supabaseClient
+    // 1. Delete existing user balance (if any)
+    const { error: balanceDeleteError } = await supabaseClient
       .from('user_balances')
-      .update({ balance: defaultBalance, updated_at: new Date().toISOString() })
+      .delete()
       .eq('user_id', userId);
-    if (balanceError) throw balanceError;
+    if (balanceDeleteError) throw balanceDeleteError;
 
-    // 2. Delete user stocks
+    // 2. Re-insert initial balance for the user
+    const { error: balanceInsertError } = await supabaseClient
+      .from('user_balances')
+      .insert({ user_id: userId, balance: defaultBalance });
+    if (balanceInsertError) throw balanceInsertError;
+
+    // 3. Delete user stocks
     const { error: stocksError } = await supabaseClient
       .from('user_stocks')
       .delete()
       .eq('user_id', userId);
     if (stocksError) throw stocksError;
 
-    // 3. Delete transactions
+    // 4. Delete transactions
     const { error: transactionsError } = await supabaseClient
       .from('transactions')
       .delete()
       .eq('user_id', userId);
     if (transactionsError) throw transactionsError;
 
-    // 4. Delete gamification XP
+    // 5. Delete gamification XP
     const { error: xpDeleteError } = await supabaseClient
       .from('gamification_xp')
       .delete()
       .eq('user_id', userId);
     if (xpDeleteError) throw xpDeleteError;
 
-    // 5. Delete gamification streaks
+    // 6. Delete gamification streaks
     const { error: streaksDeleteError } = await supabaseClient
       .from('gamification_streaks')
       .delete()
       .eq('user_id', userId);
     if (streaksDeleteError) throw streaksDeleteError;
 
-    // 6. Delete gamification badges
+    // 7. Delete gamification badges
     const { error: badgesDeleteError } = await supabaseClient
       .from('gamification_badges')
       .delete()
       .eq('user_id', userId);
     if (badgesDeleteError) throw badgesDeleteError;
 
-    // 7. Re-insert initial gamification XP and level
+    // 8. Re-insert initial gamification XP and level
     const { error: xpInsertError } = await supabaseClient
       .from('gamification_xp')
       .insert({ user_id: userId, xp: 0, level: 1 });
     if (xpInsertError) throw xpInsertError;
 
-    // 8. Re-insert initial gamification streaks
+    // 9. Re-insert initial gamification streaks
     const { error: streaksInsertError } = await supabaseClient
       .from('gamification_streaks')
       .insert({ user_id: userId, current_streak: 0, longest_streak: 0, last_activity_date: null });

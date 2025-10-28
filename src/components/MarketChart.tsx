@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TimeRange } from "@/lib/market-data-api"; // Import TimeRange
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 interface MarketChartProps {
   title: string;
@@ -62,7 +63,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
         timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     return [
-      `₹${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      formatCurrency(value),
       timeLabel,
     ];
   };
@@ -108,7 +109,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
                 tickLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis
-                tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                tickFormatter={(value) => formatCurrency(value)}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={{ stroke: 'hsl(var(--border))' }}

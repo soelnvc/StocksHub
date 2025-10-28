@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { History } from "lucide-react";
 import { useTransactions } from "@/hooks/use-transactions";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 const TransactionHistory = () => {
   const { transactions, isLoadingTransactions, error, fetchTransactions } = useTransactions();
@@ -73,7 +74,7 @@ const TransactionHistory = () => {
                         <TableCell className="font-medium">{transaction.stock_symbol}</TableCell>
                         <TableCell>{transaction.quantity}</TableCell>
                         <TableCell className="text-right">
-                          ₹{transaction.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatCurrency(transaction.price)}
                         </TableCell>
                         <TableCell className="text-right">
                           {new Date(transaction.transaction_time).toLocaleString()}

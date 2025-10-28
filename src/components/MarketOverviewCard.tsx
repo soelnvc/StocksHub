@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 interface MarketOverviewCardProps {
   title: string;
@@ -40,7 +41,7 @@ const MarketOverviewCard: React.FC<MarketOverviewCardProps> = ({
         ) : (
           <>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              ₹{value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(value)}
             </div>
             <p className={`text-xs flex items-center mt-1 ${changeColorClass}`}>
               {change !== null && (
