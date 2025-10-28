@@ -12,6 +12,7 @@ import AIMentor from "./pages/AIMentor";
 import Profile from "./pages/Profile";
 import Trade from "./pages/Trade";
 import TransactionHistory from "./pages/TransactionHistory";
+import MarketVisualization from "./pages/MarketVisualization"; // Import the new page
 import { SessionContextProvider } from "./contexts/SessionContext";
 import AuthGuard from "./components/AuthGuard";
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/trade" element={<Trade />} />
               <Route path="/transactions" element={<TransactionHistory />} />
+              <Route path="/market-visualization" element={<MarketVisualization />} /> {/* New route */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
