@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import { useMarketData } from "@/hooks/use-market-data";
 import MarketOverviewCard from "@/components/MarketOverviewCard";
 import TopStocksTable from "@/components/TopStocksTable";
+import AllStocksTable from "@/components/AllStocksTable"; // Import the new component
 import MarketChart from "@/components/MarketChart";
 import {
   Select,
@@ -45,7 +46,7 @@ const MarketVisualization = () => {
                 <SelectItem value="1d">Last 1 Day</SelectItem>
                 <SelectItem value="1m">Last 1 Month</SelectItem>
                 <SelectItem value="1y">Last 1 Year</SelectItem>
-                <SelectItem value="10y">Last 10 Years</SelectItem> {/* New item */}
+                <SelectItem value="10y">Last 10 Years</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -88,9 +89,16 @@ const MarketVisualization = () => {
             />
           </div>
 
-          {/* Top Stocks Table */}
+          {/* Top 5 Stocks Table */}
           <TopStocksTable
-            topStocks={topStocks}
+            topStocks={topStocks.slice(0, 5)} // Pass only the top 5 to the existing component
+            isLoading={isLoading}
+            error={error}
+          />
+
+          {/* All Stocks Table */}
+          <AllStocksTable
+            stocks={topStocks} // Pass the full list of stocks
             isLoading={isLoading}
             error={error}
           />

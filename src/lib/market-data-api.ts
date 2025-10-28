@@ -8,7 +8,7 @@ interface IndexData {
   history: { timestamp: number; value: number }[];
 }
 
-interface TopStock {
+export interface TopStock {
   symbol: string;
   name: string;
   price: number;
@@ -16,25 +16,66 @@ interface TopStock {
   change_percent: number;
 }
 
-export type TimeRange = '1h' | '10h' | '1d' | '1m' | '1y' | '10y'; // Added '10y'
+export type TimeRange = '1h' | '10h' | '1d' | '1m' | '1y' | '10y';
 
 const initialIndexValues: { [key: string]: number } = {
   NIFTY50: 22500.00,
   SENSEX: 74000.00,
 };
 
-const initialTopStocks: TopStock[] = [
-  { symbol: "RELIANCE", name: "Reliance Industries", price: 2900.00, change: 0, change_percent: 0 },
-  { symbol: "TCS", name: "Tata Consultancy Services", price: 3800.00, change: 0, change_percent: 0 },
-  { symbol: "HDFCBANK", name: "HDFC Bank", price: 1500.00, change: 0, change_percent: 0 },
-  { symbol: "ICICIBANK", name: "ICICI Bank", price: 1100.00, change: 0, change_percent: 0 },
-  { symbol: "INFY", name: "Infosys", price: 1600.00, change: 0, change_percent: 0 },
-];
+// Function to generate a random stock entry
+const generateRandomStock = (index: number): TopStock => {
+  const commonSymbols = [
+    "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "NVDA", "FB", "NFLX", "BABA", "JPM",
+    "V", "PG", "JNJ", "UNH", "HD", "MA", "PYPL", "ADBE", "CRM", "CMCSA",
+    "XOM", "CVX", "KO", "PEP", "WMT", "DIS", "NKE", "PFE", "MRK", "ABBV",
+    "LLY", "DHR", "TMO", "AVGO", "QCOM", "TXN", "INTC", "CSCO", "AMAT", "MU",
+    "AMD", "GOOG", "META", "BRK.B", "TSM", "ORCL", "SAP", "TM", "SNE", "SONY",
+    "HPE", "IBM", "DELL", "HPQ", "LVMH", "CDI", "RMS", "KER", "EL", "LRLCY",
+    "Kering", "Hermes", "Richemont", "Swatch", "Burberry", "Moncler", "Prada", "Ferragamo", "Tod's", "Capri",
+    "Tapestry", "PVH", "RL", "COTY", "ULTA", "SEPH", "LULU", "ATVI", "EA", "TTWO",
+    "UBI", "NTDOY", "SFTBY", "MSI", "PANW", "CRWD", "ZS", "OKTA", "SPLK", "NOW",
+    "WDAY", "SNOW", "DDOG", "NET", "ZM", "DOCU", "TEAM", "ADSK", "ANSS", "CDNS",
+    "FTNT", "MDB", "NVCR", "SMCI", "VEEV", "ZBRA", "ZSCALER", "ACN", "CDW", "FIS",
+    "GPN", "IT", "MAST", "MSCI", "PAYX", "SPGI", "VRTX", "REGN", "GILD", "BIIB",
+    "AMGN", "CELG", "BMY", "MRNA", "BNTX", "SGEN", "EXAS", "ILMN", "LH", "PKI",
+    "TFX", "WAT", "ZTS", "ALB", "APD", "BLL", "CE", "CF", "DD", "ECL",
+    "EMN", "FMC", "IFF", "LIN", "LYB", "MOS", "NEM", "NUE", "PPG", "SHW",
+    "SJM", "STZ", "SYF", "DFS", "COF", "BAC", "WFC", "C", "GS", "MS",
+    "BLK", "SPG", "PLD", "EQIX", "AMT", "CCI", "PSA", "EXR", "SBAC", "VICI",
+    "WYNN", "MGM", "LVS", "MAR", "HLT", "BKNG", "ABNB", "EXPE", "TRIP", "RCL",
+    "CCL", "NCLH", "DAL", "UAL", "AAL", "LUV", "BA", "GD", "LMT", "NOC",
+    "RTX", "HII", "TDY", "TXT", "GE", "HON", "MMM", "CAT", "DE", "PCAR",
+    "CMI", "ETN", "ROK", "PH", "IR", "AOS", "SWK", "STAN", "GWW", "FAST",
+    "RSG", "WM", "Waste", "Republic", "Clean", "WasteCon", "WasteMan", "WastePro", "WasteSol", "WasteTech",
+    "WasteServ", "WasteX", "WasteY", "WasteZ", "WasteA", "WasteB", "WasteC", "WasteD", "WasteE", "WasteF",
+    "WasteG", "WasteH", "WasteI", "WasteJ", "WasteK", "WasteL", "WasteM", "WasteN", "WasteO", "WasteP",
+    "WasteQ", "WasteR", "WasteS", "WasteT", "WasteU", "WasteV", "WasteW", "WasteX", "WasteY", "WasteZ",
+    "WasteAA", "WasteBB", "WasteCC", "WasteDD", "WasteEE", "WasteFF", "WasteGG", "WasteHH", "WasteII", "WasteJJ",
+    "WasteKK", "WasteLL", "WasteMM", "WasteNN", "WasteOO", "WastePP", "WasteQQ", "WasteRR", "WasteSS", "WasteTT",
+    "WasteUU", "WasteVV", "WasteWW", "WasteXX", "WasteYY", "WasteZZ"
+  ];
+
+  const baseSymbol = commonSymbols[index % commonSymbols.length];
+  const uniqueSuffix = Math.floor(index / commonSymbols.length) > 0 ? `-${Math.floor(index / commonSymbols.length)}` : '';
+  const symbol = `${baseSymbol}${uniqueSuffix}`;
+  const name = `${symbol} Corporation`; // Generic name
+  const price = parseFloat((Math.random() * 1000 + 50).toFixed(2)); // Price between 50 and 1050
+  return { symbol, name, price, change: 0, change_percent: 0 };
+};
+
+const generateInitialTopStocks = (count: number): TopStock[] => {
+  const stocks: TopStock[] = [];
+  for (let i = 0; i < count; i++) {
+    stocks.push(generateRandomStock(i));
+  }
+  return stocks;
+};
 
 // Store current simulated state for indices
 let currentNiftyValue = initialIndexValues.NIFTY50;
 let currentSensexValue = initialIndexValues.SENSEX;
-let currentTopStocks = initialTopStocks.map(stock => ({ ...stock }));
+let currentTopStocks = generateInitialTopStocks(200); // Generate 200 stocks
 
 // Simulate price fluctuations
 const simulateFluctuation = (basePrice: number, volatility: number = 0.005) => {
@@ -165,7 +206,7 @@ export const fetchTopStocks = async (): Promise<TopStock[]> => {
       });
       // Sort by change_percent for "top" stocks (can be customized)
       currentTopStocks.sort((a, b) => b.change_percent - a.change_percent);
-      resolve(currentTopStocks.slice(0, 5)); // Return top 5
+      resolve(currentTopStocks); // Return all 200 stocks
     }, 1000 + Math.random() * 500); // Simulate network delay
   });
 };
