@@ -7,12 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, User as UserIcon } from "lucide-react";
 import { useAIMentorChat } from "@/hooks/use-ai-mentor-chat";
 import { Skeleton } from "@/components/ui/skeleton";
-// Removed: import { useSession } from "@/contexts/SessionContext";
+import { useSession } from "@/contexts/SessionContext";
 
 const AIMentor = () => {
   const [currentMessage, setCurrentMessage] = useState("");
   const { messages, isLoading, isSending, error, sendMessage } = useAIMentorChat();
-  // Removed: const { user } = useSession();
+  // Removed: const { user } = useSession(); // Get user from session
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = async () => {
