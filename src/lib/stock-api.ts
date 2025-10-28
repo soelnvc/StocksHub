@@ -1,7 +1,6 @@
 // src/lib/stock-api.ts
 
-// This is a simulated stock API. In a real application, you would integrate with a third-party API
-// like Alpha Vantage, Finnhub, or IEX Cloud to get real-time stock data.
+import { getAllSimulatedStocks } from "@/lib/market-data-api"; // Import from market-data-api
 
 interface StockPrice {
   symbol: string;
@@ -9,19 +8,9 @@ interface StockPrice {
   timestamp: number;
 }
 
-const stockPrices: { [key: string]: number } = {
-  AAPL: 170.25,
-  GOOGL: 1800.50,
-  MSFT: 420.10,
-  AMZN: 185.70,
-  TSLA: 200.00,
-  NVDA: 1200.00,
-  // Add more simulated stocks as needed
-};
-
 /**
  * Simulates fetching the current price for a given stock symbol.
- * Returns a slightly randomized price based on a base value.
+ * It now relies on the unified stock data from market-data-api.
  * @param symbol The stock symbol (e.g., 'AAPL').
  * @returns A Promise that resolves with the StockPrice or null if not found.
  */
@@ -29,14 +18,13 @@ export const fetchStockPrice = async (symbol: string): Promise<StockPrice | null
   return new Promise((resolve) => {
     setTimeout(() => {
       const upperSymbol = symbol.toUpperCase();
-      if (stockPrices[upperSymbol]) {
-        // Simulate some price fluctuation
-        const basePrice = stockPrices[upperSymbol];
-        const fluctuation = (Math.random() - 0.5) * 0.02; // +/- 1% fluctuation
-        const currentPrice = basePrice * (1 + fluctuation);
+      const allStocks = getAllSimulatedStocks(); // Get the latest simulated stocks
+      const foundStock = allStocks.find(s => s.symbol === upperSymbol);
+
+      if (foundStock) {
         resolve({
           symbol: upperSymbol,
-          price: parseFloat(currentPrice.toFixed(2)),
+          price: foundStock.price, // Use the price from the unified source
           timestamp: Date.now(),
         });
       } else {

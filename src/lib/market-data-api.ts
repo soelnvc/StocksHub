@@ -304,6 +304,9 @@ const symbolToNameMap: { [key: string]: string } = {
   "WasteZZ": "WasteZZ Systems"
 };
 
+// Define the base volatility for individual stock price fluctuations
+const STOCK_VOLATILITY = 0.02; // +/- 1% fluctuation
+
 // Function to generate a random stock entry
 const generateRandomStock = (index: number): TopStock => {
   const baseSymbol = commonSymbols[index % commonSymbols.length];
@@ -325,13 +328,13 @@ const generateInitialTopStocks = (count: number): TopStock[] => {
   return stocks;
 };
 
-// Store current simulated state for indices
+// Store current simulated state for indices and stocks
 let currentNiftyValue = initialIndexValues.NIFTY50;
 let currentSensexValue = initialIndexValues.SENSEX;
-let currentTopStocks = generateInitialTopStocks(200); // Generate 200 stocks
+let currentTopStocks: TopStock[] = generateInitialTopStocks(200); // Generate 200 stocks initially
 
 // Simulate price fluctuations
-const simulateFluctuation = (basePrice: number, volatility: number = 0.005) => {
+const simulateFluctuation = (basePrice: number, volatility: number = STOCK_VOLATILITY) => { // Use STOCK_VOLATILITY as default
   const fluctuation = (Math.random() - 0.5) * volatility;
   return basePrice * (1 + fluctuation);
 };
@@ -440,6 +443,7 @@ export const fetchIndicesData = async (timeRange: TimeRange = '1h'): Promise<Ind
 
 /**
  * Simulates fetching real-time data for top stocks.
+ * This function also updates the internal state of currentTopStocks.
  * @returns A Promise that resolves with an array of TopStock.
  */
 export const fetchTopStocks = async (): Promise<TopStock[]> => {
@@ -447,7 +451,7 @@ export const fetchTopStocks = async (): Promise<TopStock[]> => {
     setTimeout(() => {
       currentTopStocks = currentTopStocks.map((stock: TopStock) => {
         const oldPrice = stock.price;
-        const newPrice = simulateFluctuation(stock.price, 0.005);
+        const newPrice = simulateFluctuation(stock.price, STOCK_VOLATILITY); // Use consistent STOCK_VOLATILITY
         const change = newPrice - oldPrice;
         const change_percent = (change / oldPrice) * 100;
         return {
@@ -462,4 +466,10 @@ export const fetchTopStocks = async (): Promise<TopStock[]> => {
       resolve(currentTopStocks); // Return all 200 stocks
     }, 1000 + Math.random() * 500); // Simulate network delay
   });
+};
+
+// Export a function to get the current state of all simulated stocks
+// This will be used by stock-api.ts to ensure consistent pricing
+export const getAllSimulatedStocks = (): TopStock[] => {
+  return currentTopStocks;
 };
