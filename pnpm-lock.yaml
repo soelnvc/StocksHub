@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@deno/types':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@hookform/resolvers':
         specifier: ^3.9.0
         version: 3.10.0(react-hook-form@7.55.0(react@18.3.1))
@@ -243,6 +246,9 @@ packages:
   '@babel/types@7.27.6':
     resolution: {integrity: sha512-ETyHEk2VHHvl9b9jZP5IHPavHYk57EhanlRRuae9XCpb/j5bDCbPPMOBfCWhnl/7EDJz0jEMCi/RhccCE8r1+Q==}
     engines: {node: '>=6.9.0'}
+
+  '@deno/types@0.0.1':
+    resolution: {integrity: sha512-KTB6Blr05Iw7k7aMzPWlJX0kv08xXZ5Mu7fxSp0M1HnaOHDRnFC956I4PxYdOtN27+b2723Id2G2oofxLvA35A==}
 
   '@dyad-sh/react-vite-component-tagger@0.8.0':
     resolution: {integrity: sha512-97DrCLm4+kpy5fp90cLfuhjhLlhi5/p0nzCU9/pU4V9/aIpQCb+RQ/E3BJdzpMOcoieR81zPZTEiLTW5CYKgSQ==}
@@ -2551,6 +2557,8 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
+
+  '@deno/types@0.0.1': {}
 
   '@dyad-sh/react-vite-component-tagger@0.8.0(vite@6.3.4(@types/node@22.14.1)(jiti@1.21.7)(yaml@2.7.1))':
     dependencies:
