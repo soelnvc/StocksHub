@@ -9,8 +9,7 @@ interface LeaderboardEntry {
   first_name: string | null;
   last_name: string | null;
   balance: number; // Cash balance
-  total_portfolio_value: number;
-  total_portfolio_profit_loss: number; // New field for ranking based on total P/L
+  total_portfolio_value: number; // Field for ranking based on total portfolio value
 }
 
 // New intermediate interface without the 'rank' property
@@ -20,7 +19,6 @@ interface IntermediateLeaderboardEntry {
   last_name: string | null;
   balance: number;
   total_portfolio_value: number;
-  total_portfolio_profit_loss: number;
 }
 
 interface SupabaseBalanceRawEntry {
@@ -125,16 +123,11 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       for (const [userId, userData] of userHoldingsMap.entries()) {
         let totalStockValue = 0;
-        let totalPortfolioProfitLoss = 0;
 
         for (const stock of userData.stocks) {
           const currentPrice = stockPricesMap.get(stock.stock_symbol) || 0;
           const currentValue = currentPrice * stock.quantity;
-          const totalBuyCost = stock.average_buy_price * stock.quantity;
-          const profitLossForStock = currentValue - totalBuyCost;
-
           totalStockValue += currentValue;
-          totalPortfolioProfitLoss += profitLossForStock;
         }
 
         const totalPortfolioValue = userData.balance + totalStockValue;
@@ -145,12 +138,11 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           last_name: userData.lastName,
           balance: userData.balance,
           total_portfolio_value: totalPortfolioValue,
-          total_portfolio_profit_loss: totalPortfolioProfitLoss, // Include total P/L
         });
       }
 
-      // Sort by total_portfolio_profit_loss in descending order
-      rawLeaderboard.sort((a, b) => b.total_portfolio_profit_loss - a.total_portfolio_profit_loss);
+      // Sort by total_portfolio_value in descending order
+      rawLeaderboard.sort((a, b) => b.total_portfolio_value - a.total_portfolio_value);
 
       const finalLeaderboard: LeaderboardEntry[] = rawLeaderboard.map((entry, index) => ({
         ...entry,
