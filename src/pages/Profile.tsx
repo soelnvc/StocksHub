@@ -4,11 +4,11 @@ import { useSession } from "@/contexts/SessionContext";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
 import { useProfileData } from "@/hooks/use-profile-data";
-import { useResetAccount } from "@/hooks/use-reset-account"; // Import the new hook
+import { useResetAccount } from "@/hooks/use-reset-account";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, DollarSign, Award, Flame, Package, Edit, RotateCcw } from "lucide-react"; // Import RotateCcw icon
+import { Mail, Award, Flame, Package, Edit, RotateCcw } from "lucide-react"; // Removed DollarSign
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,20 +18,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter, // Import DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import EditProfileForm from "@/components/EditProfileForm";
-import { formatCurrency } from "@/utils/currency"; // Import the new utility
+import { formatCurrency } from "@/utils/currency";
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { balance, isLoadingPortfolio, fetchPortfolio } = useUserPortfolio();
   const { xpData, streakData, badges, isLoadingGamification, fetchGamificationData } = useGamification();
   const { profile, isLoadingProfileData, fetchProfileData } = useProfileData();
-  const { isResetting, resetAccount } = useResetAccount(); // Use the new hook
+  const { isResetting, resetAccount } = useResetAccount();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false); // State for reset dialog
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const isLoading = isSessionLoading || isLoadingPortfolio || isLoadingGamification || isLoadingProfileData;
 
@@ -50,8 +50,8 @@ const Profile = () => {
   useEffect(() => {
     if (!isSessionLoading && user) {
       fetchProfileData();
-      fetchPortfolio(); // Ensure portfolio is fetched for balance display
-      fetchGamificationData(); // Ensure gamification data is fetched
+      fetchPortfolio();
+      fetchGamificationData();
     }
   }, [user, isSessionLoading, fetchProfileData, fetchPortfolio, fetchGamificationData]);
 
@@ -59,7 +59,6 @@ const Profile = () => {
     const success = await resetAccount();
     if (success) {
       setIsResetDialogOpen(false);
-      // Re-fetch all data to update the UI after reset
       await fetchProfileData();
       await fetchPortfolio();
       await fetchGamificationData();
@@ -102,7 +101,7 @@ const Profile = () => {
                 {isLoading ? <Skeleton className="h-5 w-1/2" /> : <span>{user?.email}</span>}
               </div>
               <div className="flex items-center justify-center space-x-2 text-2xl font-semibold text-gray-900 dark:text-white">
-                <DollarSign className="h-6 w-6" />
+                {/* Removed DollarSign icon here */}
                 {isLoading ? (
                   <Skeleton className="h-7 w-1/3" />
                 ) : (
