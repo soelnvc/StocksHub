@@ -108,8 +108,8 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         };
       });
 
-      // Sort by total_portfolio_value in descending order
-      rawLeaderboard.sort((a, b) => b.total_portfolio_value - a.total_portfolio_value);
+      // Sort by balance in descending order
+      rawLeaderboard.sort((a, b) => b.balance - a.balance);
 
       const finalLeaderboard = rawLeaderboard.map((entry, index) => ({
         ...entry,
