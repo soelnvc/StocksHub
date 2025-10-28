@@ -4,10 +4,11 @@ import { useSession } from "@/contexts/SessionContext";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
 import { useProfileData } from "@/hooks/use-profile-data";
+import { useResetAccount } from "@/hooks/use-reset-account"; // Import the new hook
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, DollarSign, Award, Flame, Package, Edit } from "lucide-react";
+import { Mail, DollarSign, Award, Flame, Package, Edit, RotateCcw } from "lucide-react"; // Import RotateCcw icon
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,16 +18,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter, // Import DialogFooter
 } from "@/components/ui/dialog";
 import EditProfileForm from "@/components/EditProfileForm";
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
-  const { balance, isLoadingPortfolio } = useUserPortfolio();
-  const { xpData, streakData, badges, isLoadingGamification } = useGamification();
+  const { balance, isLoadingPortfolio, fetchPortfolio } = useUserPortfolio();
+  const { xpData, streakData, badges, isLoadingGamification, fetchGamificationData } = useGamification();
   const { profile, isLoadingProfileData, fetchProfileData } = useProfileData();
+  const { isResetting, resetAccount } = useResetAccount(); // Use the new hook
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false); // State for reset dialog
 
   const isLoading = isSessionLoading || isLoadingPortfolio || isLoadingGamification || isLoadingProfileData;
 
@@ -37,7 +41,6 @@ const Profile = () => {
     return initials.toUpperCase() || "U";
   };
 
-  // Use profile data from the new hook for display
   const firstName = profile?.first_name;
   const lastName = profile?.last_name;
   const fullName = `${firstName || ''} ${lastName || ''}`.trim();
@@ -46,8 +49,21 @@ const Profile = () => {
   useEffect(() => {
     if (!isSessionLoading && user) {
       fetchProfileData();
+      fetchPortfolio(); // Ensure portfolio is fetched for balance display
+      fetchGamificationData(); // Ensure gamification data is fetched
     }
-  }, [user, isSessionLoading, fetchProfileData]);
+  }, [user, isSessionLoading, fetchProfileData, fetchPortfolio, fetchGamificationData]);
+
+  const handleResetConfirm = async () => {
+    const success = await resetAccount();
+    if (success) {
+      setIsResetDialogOpen(false);
+      // Re-fetch all data to update the UI after reset
+      await fetchProfileData();
+      await fetchPortfolio();
+      await fetchGamificationData();
+    }
+  };
 
   return (
     <Layout>
@@ -97,22 +113,48 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground mt-2">
                 Your current virtual trading balance.
               </p>
-              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="mt-4">
-                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Edit Profile</DialogTitle>
-                    <DialogDescription>
-                      Make changes to your profile here. Click save when you're done.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <EditProfileForm onClose={() => setIsEditDialogOpen(false)} />
-                </DialogContent>
-              </Dialog>
+              <div className="flex flex-col space-y-2 mt-4">
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit Profile</DialogTitle>
+                      <DialogDescription>
+                        Make changes to your profile here. Click save when you're done.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <EditProfileForm onClose={() => setIsEditDialogOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" disabled={isResetting}>
+                      <RotateCcw className="mr-2 h-4 w-4" /> Reset Account
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirm Account Reset</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to reset your account? This will clear your balance, all stock holdings, transaction history, and gamification progress. This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsResetDialogOpen(false)} disabled={isResetting}>
+                        Cancel
+                      </Button>
+                      <Button variant="destructive" onClick={handleResetConfirm} disabled={isResetting}>
+                        {isResetting ? "Resetting..." : "Confirm Reset"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardContent>
           </Card>
 
