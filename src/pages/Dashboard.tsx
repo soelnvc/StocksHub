@@ -22,11 +22,12 @@ const Dashboard = () => {
       setIsLoadingBalance(true);
       setError(null);
       try {
+        // Use .maybeSingle() to handle cases where no record is found gracefully
         const { data, error: supabaseError } = await supabase
           .from("user_balances")
           .select("balance")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle(); // Changed from .single() to .maybeSingle()
 
         if (supabaseError) {
           console.error("Supabase error fetching balance:", supabaseError.message);
@@ -37,8 +38,7 @@ const Dashboard = () => {
         if (data) {
           setBalance(data.balance);
         } else {
-          // If no balance found (data is null and no supabaseError), it means no record exists.
-          // This can happen for users who signed up before the trigger was updated.
+          // If data is null (no record found), set balance to 0
           setBalance(0); 
         }
       } catch (err: any) {
