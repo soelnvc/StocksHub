@@ -7,10 +7,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, User as UserIcon } from "lucide-react";
 import { useAIMentorChat } from "@/hooks/use-ai-mentor-chat";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSession } from "@/contexts/SessionContext";
 
 const AIMentor = () => {
   const [currentMessage, setCurrentMessage] = useState("");
   const { messages, isLoading, isSending, error, sendMessage } = useAIMentorChat();
+  // Removed: const { user } = useSession(); // Get user from session
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = async () => {
@@ -52,23 +54,38 @@ const AIMentor = () => {
               <ScrollArea className="flex-grow pr-4">
                 <div className="space-y-4">
                   {messages.map((msg) => (
-                    <div key={msg.id} className="flex flex-col items-start">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <UserIcon className="h-4 w-4 text-blue-500" />
-                        <span className="font-semibold text-gray-900 dark:text-white">You:</span>
+                    <div key={msg.id}>
+                      {/* User Message */}
+                      <div className="flex justify-end mb-2">
+                        <div className="flex items-end space-x-2 max-w-[80%]">
+                          <div className="bg-blue-600 text-white p-3 rounded-lg shadow-md">
+                            {msg.message}
+                          </div>
+                          <UserIcon className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                        </div>
                       </div>
-                      <div className="bg-blue-100 dark:bg-blue-900 text-gray-800 dark:text-gray-200 p-3 rounded-lg max-w-[80%] self-end">
-                        {msg.message}
-                      </div>
-                      <div className="flex items-center space-x-2 mt-2 mb-1">
-                        <Bot className="h-4 w-4 text-green-500" />
-                        <span className="font-semibold text-gray-900 dark:text-white">Mentor:</span>
-                      </div>
-                      <div className="bg-green-100 dark:bg-green-900 text-gray-800 dark:text-gray-200 p-3 rounded-lg max-w-[80%] self-start">
-                        {msg.response}
+
+                      {/* AI Mentor Response */}
+                      <div className="flex justify-start mb-2">
+                        <div className="flex items-end space-x-2 max-w-[80%]">
+                          <Bot className="h-6 w-6 text-green-600 flex-shrink-0" />
+                          <div className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded-lg shadow-md">
+                            {msg.response}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
+                  {isSending && (
+                    <div className="flex justify-start mb-2">
+                      <div className="flex items-end space-x-2 max-w-[80%]">
+                        <Bot className="h-6 w-6 text-green-600 flex-shrink-0" />
+                        <div className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded-lg shadow-md animate-pulse">
+                          Thinking...
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
