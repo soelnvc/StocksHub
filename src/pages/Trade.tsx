@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStockPrice } from "@/hooks/use-stock-price";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react"; // Removed DollarSign
 import { showError } from "@/utils/toast";
-import { formatCurrency } from "@/utils/currency"; // Import the new utility
+import { formatCurrency } from "@/utils/currency";
 
 const Trade = () => {
   const [symbolInput, setSymbolInput] = useState("");
@@ -85,7 +85,7 @@ const Trade = () => {
               ) : (
                 <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
                   <span>Your Balance:</span>
-                  <DollarSign className="h-4 w-4" />
+                  {/* Removed DollarSign icon here */}
                   <span>{formatCurrency(balance)}</span>
                 </div>
               )}
@@ -113,7 +113,7 @@ const Trade = () => {
               {stockData && (
                 <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
                   <span>Current Price:</span>
-                  <DollarSign className="h-4 w-4" />
+                  {/* Removed DollarSign icon here */}
                   <span>{formatCurrency(stockData.price)}</span>
                 </div>
               )}
