@@ -1,4 +1,4 @@
-import { useState } from "react"; // Import useState
+import { useState } from "react";
 import Layout from "@/components/Layout";
 import { useMarketData } from "@/hooks/use-market-data";
 import MarketOverviewCard from "@/components/MarketOverviewCard";
@@ -12,12 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input"; // Import Input component
+import { Input } from "@/components/ui/input";
 import { TimeRange } from "@/lib/market-data-api";
 
 const MarketVisualization = () => {
   const { indices, topStocks, isLoading, error, timeRange, setTimeRange } = useMarketData();
-  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
+  const [searchTerm, setSearchTerm] = useState("");
 
   const niftyData = indices.find(index => index.name === "NIFTY50");
   const sensexData = indices.find(index => index.name === "SENSEX");
@@ -26,11 +26,13 @@ const MarketVisualization = () => {
     setTimeRange(value as TimeRange);
   };
 
-  // Filter stocks based on search term
+  // Filter stocks based on search term - now using "startsWith"
   const filteredStocks = topStocks.filter(stock =>
-    stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+    stock.symbol.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+    stock.name.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
+
+  console.log(`Search Term: "${searchTerm}", Filtered Stocks Count: ${filteredStocks.length}`);
 
   return (
     <Layout>
@@ -117,7 +119,7 @@ const MarketVisualization = () => {
 
           {/* All Stocks Table */}
           <AllStocksTable
-            stocks={filteredStocks} // Pass the filtered list
+            stocks={filteredStocks}
             isLoading={isLoading}
             error={error}
           />
