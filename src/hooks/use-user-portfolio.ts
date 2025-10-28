@@ -10,8 +10,10 @@ interface UserStock {
   stock_symbol: string;
   quantity: number;
   average_buy_price: number;
-  current_price?: number | null; // Added current_price
-  current_value?: number | null; // Added current_value
+  current_price?: number | null;
+  current_value?: number | null;
+  profit_loss_per_share?: number | null;
+  total_profit_loss?: number | null;
 }
 
 interface UseUserPortfolioResult {
@@ -19,6 +21,7 @@ interface UseUserPortfolioResult {
   userStocks: UserStock[];
   totalStockValue: number;
   totalPortfolioValue: number;
+  totalPortfolioProfitLoss: number; // New: Total P/L for the portfolio
   isLoadingPortfolio: boolean;
   error: string | null;
   buyStock: (symbol: string, quantity: number, price: number) => Promise<boolean>;
@@ -32,39 +35,47 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
   const [userStocks, setUserStocks] = useState<UserStock[]>([]);
   const [totalStockValue, setTotalStockValue] = useState<number>(0);
   const [totalPortfolioValue, setTotalPortfolioValue] = useState<number>(0);
+  const [totalPortfolioProfitLoss, setTotalPortfolioProfitLoss] = useState<number>(0); // New state
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const calculatePortfolioValues = useCallback(async (currentStocks: UserStock[], currentBalance: number | null) => {
-    if (!currentStocks.length) {
-      setTotalStockValue(0);
-      setTotalPortfolioValue(currentBalance || 0);
-      setUserStocks([]); // Clear stocks if no holdings
-      return;
-    }
-
     let calculatedTotalStockValue = 0;
-    const updatedStocks: UserStock[] = await Promise.all(
-      currentStocks.map(async (stock) => {
-        const priceData = await fetchStockPrice(stock.stock_symbol);
-        const currentPrice = priceData?.price || null;
-        const currentValue = currentPrice !== null ? currentPrice * stock.quantity : null;
+    let calculatedTotalProfitLoss = 0;
+    const updatedStocks: UserStock[] = [];
 
-        if (currentValue !== null) {
-          calculatedTotalStockValue += currentValue;
-        }
+    if (currentStocks.length > 0) {
+      await Promise.all(
+        currentStocks.map(async (stock) => {
+          const priceData = await fetchStockPrice(stock.stock_symbol);
+          const currentPrice = priceData?.price || null;
+          const currentValue = currentPrice !== null ? currentPrice * stock.quantity : null;
+          const totalBuyCost = stock.average_buy_price * stock.quantity;
+          const profitLoss = currentValue !== null ? currentValue - totalBuyCost : null;
+          const profitLossPerShare = currentPrice !== null ? currentPrice - stock.average_buy_price : null;
 
-        return {
-          ...stock,
-          current_price: currentPrice,
-          current_value: currentValue,
-        };
-      })
-    );
+          if (currentValue !== null) {
+            calculatedTotalStockValue += currentValue;
+          }
+          if (profitLoss !== null) {
+            calculatedTotalProfitLoss += profitLoss;
+          }
+
+          updatedStocks.push({
+            ...stock,
+            current_price: currentPrice,
+            current_value: currentValue,
+            profit_loss_per_share: profitLossPerShare,
+            total_profit_loss: profitLoss,
+          });
+        })
+      );
+    }
 
     setTotalStockValue(calculatedTotalStockValue);
     setTotalPortfolioValue(calculatedTotalStockValue + (currentBalance || 0));
-    setUserStocks(updatedStocks); // Update userStocks with current prices and values
+    setTotalPortfolioProfitLoss(calculatedTotalProfitLoss); // Set total portfolio P/L
+    setUserStocks(updatedStocks);
   }, []);
 
   const fetchPortfolio = useCallback(async () => {
@@ -286,5 +297,5 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     }
   }, [user, balance, userStocks, fetchPortfolio]);
 
-  return { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error, buyStock, sellStock, fetchPortfolio };
+  return { balance, userStocks, totalStockValue, totalPortfolioValue, totalPortfolioProfitLoss, isLoadingPortfolio, error, buyStock, sellStock, fetchPortfolio };
 };

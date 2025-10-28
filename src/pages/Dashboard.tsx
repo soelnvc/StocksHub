@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, Flame, TrendingUp } from "lucide-react"; // Re-added Flame icon
+import { Wallet, Package, Award, Flame, TrendingUp, LineChart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
@@ -21,8 +21,8 @@ import { Badge } from "@/components/ui/badge";
 const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { profile, isLoadingProfileData } = useProfileData();
-  const { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
-  const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification(); // Re-added streakData
+  const { balance, userStocks, totalStockValue, totalPortfolioValue, totalPortfolioProfitLoss, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
+  const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
 
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +67,10 @@ const Dashboard = () => {
   const displayError = error || portfolioError || gamificationError;
 
   const firstName = profile?.first_name || user?.user_metadata?.first_name || "Trader";
+
+  const isProfit = totalPortfolioProfitLoss >= 0;
+  const profitLossColorClass = isProfit ? "text-green-600" : "text-red-600";
+  const ProfitLossIcon = isProfit ? TrendingUp : LineChart; // Using LineChart for loss, TrendingUp for profit
 
   return (
     <Layout>
@@ -148,9 +152,36 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
+          {/* New Card for Total Portfolio P/L */}
           <Card className="bg-white dark:bg-gray-800 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Total P/L
+              </CardTitle>
+              <ProfitLossIcon className={`h-4 w-4 ${profitLossColorClass}`} />
+            </CardHeader>
+            <CardContent>
+              {displayLoading ? (
+                <Skeleton className="h-10 w-3/4" />
+              ) : displayError ? (
+                <p className="text-red-500 text-2xl font-bold">{displayError}</p>
+              ) : (
+                <div className={`text-4xl font-bold ${profitLossColorClass}`}>
+                  ₹{totalPortfolioProfitLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Overall profit/loss across all holdings.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* XP & Level and Trading Streak Cards */}
+        <div className="grid gap-4 md:grid-cols-2 w-full max-w-6xl mb-8">
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300">
                 XP & Level
               </CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
@@ -168,29 +199,28 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
-        </div>
 
-        {/* New Card for Trading Streak */}
-        <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg mb-8">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
-              <Flame className="h-5 w-5 text-orange-500" />
-              <span>Trading Streak</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {displayLoading ? (
-              <Skeleton className="h-10 w-1/2 mx-auto" />
-            ) : (
-              <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                {streakData?.current_streak || 0} Days
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Longest streak: {streakData?.longest_streak || 0} days
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+                <span>Trading Streak</span>
+              </CardTitle>
+            </CardHeader> {/* Removed duplicate </CardTitle> */}
+            <CardContent>
+              {displayLoading ? (
+                <Skeleton className="h-10 w-1/2 mx-auto" />
+              ) : (
+                <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                  {streakData?.current_streak || 0} Days
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Longest streak: {streakData?.longest_streak || 0} days
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -218,36 +248,50 @@ const Dashboard = () => {
                       <TableHead className="text-right">Avg. Buy Price</TableHead>
                       <TableHead className="text-right">Current Price</TableHead>
                       <TableHead className="text-right">Current Value</TableHead>
+                      <TableHead className="text-right">P/L</TableHead> {/* New column */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {userStocks.map((stock) => (
-                      <TableRow key={stock.id}>
-                        <TableCell className="font-medium">{stock.stock_symbol}</TableCell>
-                        <TableCell>{stock.quantity}</TableCell>
-                        <TableCell className="text-right">
-                          ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isLoadingPortfolio ? (
-                            <Skeleton className="h-4 w-16 inline-block" />
-                          ) : stock.current_price !== null ? (
-                            `₹${stock.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          ) : (
-                            "N/A"
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isLoadingPortfolio ? (
-                            <Skeleton className="h-4 w-20 inline-block" />
-                          ) : stock.current_value !== null ? (
-                            `₹${stock.current_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                          ) : (
-                            "N/A"
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {userStocks.map((stock) => {
+                      const isStockProfit = stock.total_profit_loss != null && stock.total_profit_loss >= 0;
+                      const stockProfitLossColorClass = isStockProfit ? "text-green-600" : "text-red-600";
+                      return (
+                        <TableRow key={stock.id}>
+                          <TableCell className="font-medium">{stock.stock_symbol}</TableCell>
+                          <TableCell>{stock.quantity}</TableCell>
+                          <TableCell className="text-right">
+                            ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {isLoadingPortfolio ? (
+                              <Skeleton className="h-4 w-16 inline-block" />
+                            ) : stock.current_price != null ? (
+                              `₹${stock.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ) : (
+                              "N/A"
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {isLoadingPortfolio ? (
+                              <Skeleton className="h-4 w-20 inline-block" />
+                            ) : stock.current_value != null ? (
+                              `₹${stock.current_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ) : (
+                              "N/A"
+                            )}
+                          </TableCell>
+                          <TableCell className={`text-right ${stockProfitLossColorClass}`}> {/* New P/L cell */}
+                            {isLoadingPortfolio ? (
+                              <Skeleton className="h-4 w-16 inline-block" />
+                            ) : stock.total_profit_loss != null ? (
+                              `₹${stock.total_profit_loss?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            ) : (
+                              "N/A"
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
