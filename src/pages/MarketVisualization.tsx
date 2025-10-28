@@ -3,13 +3,24 @@ import { useMarketData } from "@/hooks/use-market-data";
 import MarketOverviewCard from "@/components/MarketOverviewCard";
 import TopStocksTable from "@/components/TopStocksTable";
 import MarketChart from "@/components/MarketChart";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TimeRange } from "@/lib/market-data-api"; // Import TimeRange
 
 const MarketVisualization = () => {
-  const { indices, topStocks, isLoading, error } = useMarketData();
+  const { indices, topStocks, isLoading, error, timeRange, setTimeRange } = useMarketData();
 
   const niftyData = indices.find(index => index.name === "NIFTY50");
   const sensexData = indices.find(index => index.name === "SENSEX");
+
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value as TimeRange);
+  };
 
   return (
     <Layout>
@@ -22,6 +33,21 @@ const MarketVisualization = () => {
         </p>
 
         <div className="w-full max-w-6xl space-y-8">
+          {/* Time Range Selector */}
+          <div className="flex justify-end w-full max-w-6xl">
+            <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select time range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1h">Last 1 Hour</SelectItem>
+                <SelectItem value="1d">Last 1 Day</SelectItem>
+                <SelectItem value="1m">Last 1 Month</SelectItem>
+                <SelectItem value="1y">Last 1 Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Index Overview Cards */}
           <div className="grid gap-4 md:grid-cols-2">
             <MarketOverviewCard
@@ -49,12 +75,14 @@ const MarketVisualization = () => {
               data={niftyData?.history || []}
               isLoading={isLoading}
               error={error}
+              timeRange={timeRange} // Pass timeRange
             />
             <MarketChart
               title="SENSEX"
               data={sensexData?.history || []}
               isLoading={isLoading}
               error={error}
+              timeRange={timeRange} // Pass timeRange
             />
           </div>
 

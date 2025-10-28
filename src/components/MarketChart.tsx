@@ -10,37 +10,75 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TimeRange } from "@/lib/market-data-api"; // Import TimeRange
 
 interface MarketChartProps {
   title: string;
   data: { timestamp: number; value: number }[];
   isLoading: boolean;
   error: string | null;
+  timeRange: TimeRange; // New prop
 }
 
-const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error }) => {
+const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error, timeRange }) => {
   const formatXAxis = (tickItem: number) => {
     const date = new Date(tickItem);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    switch (timeRange) {
+      case '1h':
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      case '1d':
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Still show time for 1 day
+      case '1m':
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      case '1y':
+        return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
+      default:
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   };
 
   const formatTooltip = (value: number, _name: string, props: any) => {
     const timestamp = props.payload.timestamp;
     const date = new Date(timestamp);
+    let timeLabel: string;
+    switch (timeRange) {
+      case '1h':
+      case '1d':
+        timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        break;
+      case '1m':
+        timeLabel = date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        break;
+      case '1y':
+        timeLabel = date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+        break;
+      default:
+        timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
     return [
       `₹${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      timeLabel,
     ];
   };
 
+  const getTitleSuffix = (range: TimeRange) => {
+    switch (range) {
+      case '1h': return "(Last Hour)";
+      case '1d': return "(Last Day)";
+      case '1m': return "(Last Month)";
+      case '1y': return "(Last Year)";
+      default: return "";
+    }
+  };
+
   return (
-    <Card className="bg-white dark:bg-gray-800 shadow-lg h-full flex flex-col"> {/* Added h-full and flex flex-col */}
+    <Card className="bg-white dark:bg-gray-800 shadow-lg h-full flex flex-col">
       <CardHeader className="border-b dark:border-gray-700">
         <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
-          {title} Trend (Last Hour)
+          {title} Trend {getTitleSuffix(timeRange)}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow p-4 overflow-hidden"> {/* Changed height to flex-grow and added overflow-hidden */}
+      <CardContent className="flex-grow p-4 overflow-hidden">
         {isLoading ? (
           <Skeleton className="h-full w-full" />
         ) : error ? (

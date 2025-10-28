@@ -1,7 +1,7 @@
 // src/hooks/use-market-data.ts
 
 import { useState, useEffect, useCallback } from "react";
-import { fetchIndicesData, fetchTopStocks } from "@/lib/market-data-api";
+import { fetchIndicesData, fetchTopStocks, TimeRange } from "@/lib/market-data-api"; // Import TimeRange
 import { showError } from "@/utils/toast";
 
 interface IndexData {
@@ -25,7 +25,9 @@ interface UseMarketDataResult {
   topStocks: TopStock[];
   isLoading: boolean;
   error: string | null;
-  fetchMarketData: () => Promise<void>;
+  timeRange: TimeRange; // Add timeRange to result
+  setTimeRange: (range: TimeRange) => void; // Add setTimeRange to result
+  fetchMarketData: (range?: TimeRange) => Promise<void>; // Allow optional range
 }
 
 export const useMarketData = (): UseMarketDataResult => {
@@ -33,13 +35,14 @@ export const useMarketData = (): UseMarketDataResult => {
   const [topStocks, setTopStocks] = useState<TopStock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>('1h'); // New state for time range
 
-  const fetchMarketData = useCallback(async () => {
+  const fetchMarketData = useCallback(async (range: TimeRange = timeRange) => { // Use current timeRange as default
     setIsLoading(true);
     setError(null);
     try {
       const [indicesData, topStocksData] = await Promise.all([
-        fetchIndicesData(),
+        fetchIndicesData(range), // Pass the selected range
         fetchTopStocks(),
       ]);
       setIndices(indicesData);
@@ -51,13 +54,13 @@ export const useMarketData = (): UseMarketDataResult => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [timeRange]); // Re-run if timeRange changes
 
   useEffect(() => {
-    fetchMarketData();
-    const interval = setInterval(fetchMarketData, 300000); // Refresh every 5 minutes (300000 ms)
+    fetchMarketData(timeRange); // Fetch data for the current timeRange on mount and timeRange change
+    const interval = setInterval(() => fetchMarketData(timeRange), 300000); // Refresh every 5 minutes (300000 ms)
     return () => clearInterval(interval);
-  }, [fetchMarketData]);
+  }, [fetchMarketData, timeRange]); // Add timeRange to dependencies
 
-  return { indices, topStocks, isLoading, error, fetchMarketData };
+  return { indices, topStocks, isLoading, error, timeRange, setTimeRange, fetchMarketData };
 };
