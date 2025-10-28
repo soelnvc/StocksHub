@@ -7,13 +7,13 @@ import { useStockPrice } from "@/hooks/use-stock-price";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingUp } from "lucide-react";
-import { showError } from "@/utils/toast"; // Removed showSuccess
+import { showError } from "@/utils/toast";
 
 const Trade = () => {
   const [symbolInput, setSymbolInput] = useState("");
   const [quantity, setQuantity] = useState<number | string>("");
   const { stockData, isLoading: isLoadingStockPrice, error: stockPriceError, fetchPrice } = useStockPrice();
-  const { balance, userStocks, isLoadingPortfolio, buyStock, sellStock } = useUserPortfolio(); // Removed fetchPortfolio
+  const { balance, userStocks, isLoadingPortfolio, buyStock, sellStock } = useUserPortfolio();
 
   const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSymbolInput(e.target.value.toUpperCase());
