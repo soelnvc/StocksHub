@@ -3,13 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
 import { fetchTopStocks, TopStock } from "@/lib/market-data-api"; // Import fetchTopStocks and TopStock
 
+// Define the initial balance for all users as per the handle_new_user function
+const TOTAL_INITIAL_BALANCE = 100000.00;
+
 interface LeaderboardEntry {
   rank: number;
   user_id: string;
   first_name: string | null;
   last_name: string | null;
   balance: number; // Cash balance
-  total_portfolio_value: number; // Field for ranking based on total portfolio value
+  total_portfolio_value: number;
+  total_profit_made: number; // New field for ranking based on profit
 }
 
 interface SupabaseBalanceRawEntry {
@@ -88,8 +92,9 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           current.stockValue += stockValue;
           userPortfolioValues.set(userId, current);
         } else {
+          // This case should ideally not happen if all users have a balance entry
           userPortfolioValues.set(userId, {
-            balance: 0,
+            balance: 0, // Default to 0 if no balance entry found
             stockValue: stockValue,
             firstName: null,
             lastName: null
@@ -99,17 +104,19 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       const rawLeaderboard = Array.from(userPortfolioValues.entries()).map(([userId, data]) => {
         const totalPortfolioValue = data.balance + data.stockValue;
+        const totalProfitMade = totalPortfolioValue - TOTAL_INITIAL_BALANCE; // Calculate profit
         return {
           user_id: userId,
           first_name: data.firstName,
           last_name: data.lastName,
           balance: data.balance,
           total_portfolio_value: totalPortfolioValue,
+          total_profit_made: totalProfitMade, // Include profit in the entry
         };
       });
 
-      // Sort by balance in descending order
-      rawLeaderboard.sort((a, b) => b.balance - a.balance);
+      // Sort by total_profit_made in descending order
+      rawLeaderboard.sort((a, b) => b.total_profit_made - a.total_profit_made);
 
       const finalLeaderboard = rawLeaderboard.map((entry, index) => ({
         ...entry,
