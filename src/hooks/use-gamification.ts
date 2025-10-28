@@ -9,8 +9,10 @@ interface GamificationXP {
 }
 
 interface GamificationStreak {
-  current_streak: number;
-  longest_streak: number;
+  current_streak: number; // Consecutive trading days
+  longest_streak: number; // Longest consecutive trading days
+  trades_streak: number; // Consecutive trades within the current trading period
+  longest_trades_streak: number; // Longest consecutive trades ever
   last_activity_date: string | null;
 }
 
@@ -57,15 +59,15 @@ export const useGamification = (): UseGamificationResult => {
       if (xpError) throw xpError;
       setXpData(xpResult || { xp: 0, level: 1 }); // Default to 0 XP, Level 1 if no entry
 
-      // Fetch Streaks
+      // Fetch Streaks including new trade streak columns
       const { data: streakResult, error: streakError } = await supabase
         .from("gamification_streaks")
-        .select("current_streak, longest_streak, last_activity_date")
+        .select("current_streak, longest_streak, last_activity_date, trades_streak, longest_trades_streak")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (streakError) throw streakError;
-      setStreakData(streakResult || { current_streak: 0, longest_streak: 0, last_activity_date: null });
+      setStreakData(streakResult || { current_streak: 0, longest_streak: 0, trades_streak: 0, longest_trades_streak: 0, last_activity_date: null });
 
       // Fetch Badges
       const { data: badgesResult, error: badgesError } = await supabase

@@ -213,11 +213,11 @@ const Dashboard = () => {
                 <Skeleton className="h-10 w-1/2 mx-auto" />
               ) : (
                 <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {streakData?.current_streak || 0} Days
+                  {streakData?.trades_streak || 0} Trades
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Longest streak: {streakData?.longest_streak || 0} days
+                Longest streak: {streakData?.longest_trades_streak || 0} trades
               </p>
             </CardContent>
           </Card>

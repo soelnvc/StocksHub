@@ -37,45 +37,62 @@ export const updateGamificationOnTrade = async (user: User) => {
     // Update Streak
     const { data: streakData, error: streakError } = await supabase
       .from("gamification_streaks")
-      .select("current_streak, longest_streak, last_activity_date")
+      .select("current_streak, longest_streak, last_activity_date, trades_streak, longest_trades_streak")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (streakError) throw streakError;
 
-    let currentStreak = streakData?.current_streak || 0;
-    let longestStreak = streakData?.longest_streak || 0;
+    let currentDailyStreak = streakData?.current_streak || 0;
+    let longestDailyStreak = streakData?.longest_streak || 0;
+    let currentTradesStreak = streakData?.trades_streak || 0;
+    let longestTradesStreak = streakData?.longest_trades_streak || 0;
+
     const lastActivityDate = streakData?.last_activity_date ? new Date(streakData.last_activity_date) : null;
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to start of day
 
     if (!lastActivityDate || lastActivityDate.toDateString() !== today.toDateString()) {
-      // If last activity was not today, check if it was yesterday
+      // If last activity was not today
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
 
       if (lastActivityDate && lastActivityDate.toDateString() === yesterday.toDateString()) {
-        currentStreak += 1; // Continue streak
+        // Continued daily streak
+        currentDailyStreak += 1;
+        currentTradesStreak += 1; // Increment trades streak for the new day's first trade
       } else {
-        currentStreak = 1; // Start new streak
+        // New daily streak (day was missed)
+        currentDailyStreak = 1;
+        currentTradesStreak = 1; // Start new trades streak
       }
 
-      if (currentStreak > longestStreak) {
-        longestStreak = currentStreak;
+      if (currentDailyStreak > longestDailyStreak) {
+        longestDailyStreak = currentDailyStreak;
       }
-
-      const { error: updateStreakError } = await supabase
-        .from("gamification_streaks")
-        .update({
-          current_streak: currentStreak,
-          longest_streak: longestStreak,
-          last_activity_date: today.toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-
-      if (updateStreakError) throw updateStreakError;
+    } else {
+      // Activity on the same day, just increment trades streak
+      currentTradesStreak += 1;
     }
+
+    if (currentTradesStreak > longestTradesStreak) {
+      longestTradesStreak = currentTradesStreak;
+    }
+
+    const { error: updateStreakError } = await supabase
+      .from("gamification_streaks")
+      .update({
+        current_streak: currentDailyStreak,
+        longest_streak: longestDailyStreak,
+        trades_streak: currentTradesStreak,
+        longest_trades_streak: longestTradesStreak,
+        last_activity_date: today.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id);
+
+    if (updateStreakError) throw updateStreakError;
+
   } catch (err: any) {
     console.error("Error updating gamification data:", err.message);
     showError("Failed to update gamification progress.");
