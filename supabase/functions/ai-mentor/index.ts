@@ -45,9 +45,8 @@ serve(async (req: Request) => {
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (GEMINI_API_KEY) {
-      console.log("AI Mentor: GEMINI_API_KEY found. Attempting to call Gemini API.");
+      console.log("AI Mentor: GEMINI_API_KEY environment variable is set.");
       try {
-        // Changed v1beta to v1 in the API endpoint
         const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
           headers: {
@@ -62,15 +61,23 @@ serve(async (req: Request) => {
 
         if (geminiResponse.ok) {
           const data = await geminiResponse.json();
-          aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "I couldn't generate a response from Gemini. Please try again.";
-          console.log("AI Mentor: Successfully received response from Gemini.");
+          console.log("AI Mentor: Full Gemini API response data:", JSON.stringify(data)); // Log full data
+
+          const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (generatedText) {
+            aiResponse = generatedText;
+            console.log("AI Mentor: Successfully received and parsed response from Gemini.");
+          } else {
+            aiResponse = "I received a response from Gemini, but it didn't contain the expected content. Please try rephrasing your question.";
+            console.warn("AI Mentor: Gemini API response was OK, but no generated text found in candidates.");
+          }
         } else {
           const errorBody = await geminiResponse.text();
-          console.error('AI Mentor: Gemini API error response:', geminiResponse.status, errorBody);
+          console.error('AI Mentor: Gemini API error response (not OK status):', geminiResponse.status, errorBody);
           aiResponse = "I'm having trouble connecting to my brain right now. Please try again later!";
         }
       } catch (apiError: any) {
-        console.error('AI Mentor: Error calling Gemini API:', apiError.message || apiError);
+        console.error('AI Mentor: Error calling Gemini API (network/fetch issue):', apiError.message || apiError);
         aiResponse = "An error occurred while processing your request with the AI. Please try again.";
       }
     } else {
@@ -82,7 +89,7 @@ serve(async (req: Request) => {
       status: 200,
     });
   } catch (error: any) {
-    console.error("AI Mentor: Error in AI mentor edge function:", error.message);
+    console.error("AI Mentor: Error in AI mentor edge function (general catch):", error.message);
     return new Response(JSON.stringify({ error: "Failed to process AI request." }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
