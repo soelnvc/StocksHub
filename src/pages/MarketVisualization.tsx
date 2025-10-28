@@ -41,6 +41,7 @@ const MarketVisualization = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1h">Last 1 Hour</SelectItem>
+                <SelectItem value="10h">Last 10 Hours</SelectItem> {/* New item */}
                 <SelectItem value="1d">Last 1 Day</SelectItem>
                 <SelectItem value="1m">Last 1 Month</SelectItem>
                 <SelectItem value="1y">Last 1 Year</SelectItem>
@@ -75,14 +76,14 @@ const MarketVisualization = () => {
               data={niftyData?.history || []}
               isLoading={isLoading}
               error={error}
-              timeRange={timeRange} // Pass timeRange
+              timeRange={timeRange}
             />
             <MarketChart
               title="SENSEX"
               data={sensexData?.history || []}
               isLoading={isLoading}
               error={error}
-              timeRange={timeRange} // Pass timeRange
+              timeRange={timeRange}
             />
           </div>
 

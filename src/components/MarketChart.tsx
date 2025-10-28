@@ -25,9 +25,9 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
     const date = new Date(tickItem);
     switch (timeRange) {
       case '1h':
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      case '10h': // Added '10h'
       case '1d':
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Still show time for 1 day
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       case '1m':
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
       case '1y':
@@ -43,6 +43,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
     let timeLabel: string;
     switch (timeRange) {
       case '1h':
+      case '10h': // Added '10h'
       case '1d':
         timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         break;
@@ -64,6 +65,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
   const getTitleSuffix = (range: TimeRange) => {
     switch (range) {
       case '1h': return "(Last Hour)";
+      case '10h': return "(Last 10 Hours)"; // Added '10h'
       case '1d': return "(Last Day)";
       case '1m': return "(Last Month)";
       case '1y': return "(Last Year)";
