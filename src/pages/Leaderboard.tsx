@@ -21,8 +21,8 @@ const Leaderboard = () => {
 
   useEffect(() => {
     fetchLeaderboard(); // Fetch on component mount
-    // Optionally, refetch periodically
-    const interval = setInterval(fetchLeaderboard, 60000); // Refetch every minute
+    // Refetch periodically every 15 seconds for a more real-time feel
+    const interval = setInterval(fetchLeaderboard, 15000); // Refetch every 15 seconds
     return () => clearInterval(interval);
   }, [fetchLeaderboard]);
 
