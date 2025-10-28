@@ -13,10 +13,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileData } from "@/hooks/use-profile-data";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Navbar: React.FC = () => {
-  const { user } = useSession();
+  const { user, isLoading: isSessionLoading } = useSession();
   const { profile, isLoadingProfileData } = useProfileData();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -75,8 +75,8 @@ const Navbar: React.FC = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full" disabled={isLoadingProfileData}>
-                  {isLoadingProfileData ? (
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full" disabled={isSessionLoading || isLoadingProfileData}>
+                  {isSessionLoading || isLoadingProfileData ? (
                     <Skeleton className="h-8 w-8 rounded-full" />
                   ) : (
                     <Avatar className="h-8 w-8">
@@ -90,10 +90,19 @@ const Navbar: React.FC = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex flex-col space-y-1 p-2">
-                  <p className="text-sm font-medium leading-none">{userName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
+                  {isSessionLoading || isLoadingProfileData ? (
+                    <>
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium leading-none">{userName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </>
+                  )}
                 </div>
                 {isMobile && (
                   <>
