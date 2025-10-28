@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
+import { updateGamificationOnTrade } from "@/utils/gamification"; // Import the new utility
 
 interface UserStock {
   id: string;
@@ -136,6 +137,9 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
 
       if (transactionError) throw transactionError;
 
+      // 4. Update gamification data
+      await updateGamificationOnTrade(user);
+
       setBalance(newBalance); // Optimistic update
       await fetchPortfolio(); // Re-fetch to ensure consistency
       showSuccess(`Successfully bought ${quantity} shares of ${symbol}.`);
@@ -208,6 +212,9 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
         });
 
       if (transactionError) throw transactionError;
+
+      // 4. Update gamification data
+      await updateGamificationOnTrade(user);
 
       setBalance(newBalance); // Optimistic update
       await fetchPortfolio(); // Re-fetch to ensure consistency
