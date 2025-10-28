@@ -3,20 +3,22 @@ import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { updateGamificationOnTrade } from "@/utils/gamification";
-import { fetchStockPrice } from "@/lib/stock-api"; // Import fetchStockPrice
+import { fetchStockPrice } from "@/lib/stock-api";
 
 interface UserStock {
   id: string;
   stock_symbol: string;
   quantity: number;
   average_buy_price: number;
+  current_price?: number | null; // Added current_price
+  current_value?: number | null; // Added current_value
 }
 
 interface UseUserPortfolioResult {
   balance: number | null;
   userStocks: UserStock[];
-  totalStockValue: number; // New: Total current market value of all owned stocks
-  totalPortfolioValue: number; // New: Total stock value + cash balance
+  totalStockValue: number;
+  totalPortfolioValue: number;
   isLoadingPortfolio: boolean;
   error: string | null;
   buyStock: (symbol: string, quantity: number, price: number) => Promise<boolean>;
@@ -37,20 +39,32 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     if (!currentStocks.length) {
       setTotalStockValue(0);
       setTotalPortfolioValue(currentBalance || 0);
+      setUserStocks([]); // Clear stocks if no holdings
       return;
     }
 
-    let calculatedStockValue = 0;
-    const fetchPromises = currentStocks.map(async (stock) => {
-      const priceData = await fetchStockPrice(stock.stock_symbol);
-      if (priceData) {
-        calculatedStockValue += priceData.price * stock.quantity;
-      }
-    });
+    let calculatedTotalStockValue = 0;
+    const updatedStocks: UserStock[] = await Promise.all(
+      currentStocks.map(async (stock) => {
+        const priceData = await fetchStockPrice(stock.stock_symbol);
+        const currentPrice = priceData?.price || null;
+        const currentValue = currentPrice !== null ? currentPrice * stock.quantity : null;
 
-    await Promise.all(fetchPromises);
-    setTotalStockValue(calculatedStockValue);
-    setTotalPortfolioValue(calculatedStockValue + (currentBalance || 0));
+        if (currentValue !== null) {
+          calculatedTotalStockValue += currentValue;
+        }
+
+        return {
+          ...stock,
+          current_price: currentPrice,
+          current_value: currentValue,
+        };
+      })
+    );
+
+    setTotalStockValue(calculatedTotalStockValue);
+    setTotalPortfolioValue(calculatedTotalStockValue + (currentBalance || 0));
+    setUserStocks(updatedStocks); // Update userStocks with current prices and values
   }, []);
 
   const fetchPortfolio = useCallback(async () => {
@@ -82,9 +96,8 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
 
       if (stocksError) throw stocksError;
       const currentUserStocks = stocksData || [];
-      setUserStocks(currentUserStocks);
 
-      // Calculate portfolio values
+      // Calculate portfolio values and update stocks with current prices
       await calculatePortfolioValues(currentUserStocks, currentBalance);
 
     } catch (err: any) {
@@ -102,7 +115,7 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     }
   }, [user, isSessionLoading, fetchPortfolio]);
 
-  // Optional: Refetch portfolio periodically to update stock values
+  // Refetch portfolio periodically to update stock values
   useEffect(() => {
     if (user && !isLoadingPortfolio) {
       const interval = setInterval(() => {

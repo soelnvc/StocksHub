@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, TrendingUp } from "lucide-react"; // Removed Flame icon
+import { Wallet, Package, Award, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
@@ -22,7 +22,7 @@ const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { profile, isLoadingProfileData } = useProfileData();
   const { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
-  const { xpData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification(); // Removed streakData
+  const { xpData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
 
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -207,18 +207,21 @@ const Dashboard = () => {
                           ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className="text-right">
-                          {/* This will be updated by the useUserPortfolio hook's internal price fetching */}
                           {isLoadingPortfolio ? (
                             <Skeleton className="h-4 w-16 inline-block" />
+                          ) : stock.current_price !== null ? (
+                            `₹${stock.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           ) : (
-                            `₹${(totalStockValue / userStocks.reduce((sum, s) => sum + s.quantity, 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            "N/A"
                           )}
                         </TableCell>
                         <TableCell className="text-right">
                           {isLoadingPortfolio ? (
                             <Skeleton className="h-4 w-20 inline-block" />
+                          ) : stock.current_value !== null ? (
+                            `₹${stock.current_value?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                           ) : (
-                            `₹${(totalStockValue / userStocks.length).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            "N/A"
                           )}
                         </TableCell>
                       </TableRow>
