@@ -50,6 +50,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchLeaderboard = useCallback(async () => {
+    console.log("Leaderboard: Starting fetchLeaderboard...");
     setIsLoading(true);
     setError(null);
     try {
@@ -68,6 +69,8 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       const stockPricesMap = new Map<string, number>();
       allCurrentStocks.forEach((stock: TopStock) => stockPricesMap.set(stock.symbol, stock.price));
+      console.log("Leaderboard: Current simulated stock prices (sample):", Array.from(stockPricesMap.entries()).slice(0, 5));
+
 
       const userHoldingsMap = new Map<string, {
         balance: number;
@@ -139,6 +142,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           balance: userData.balance,
           total_portfolio_value: totalPortfolioValue,
         });
+        console.log(`Leaderboard: User ${userData.firstName || 'Anonymous'} (${userId}) - Calculated Portfolio Value: ${totalPortfolioValue.toFixed(2)}`);
       }
 
       // Sort by total_portfolio_value in descending order
@@ -150,6 +154,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
       }));
 
       setLeaderboard(finalLeaderboard);
+      console.log("Leaderboard: Fetching complete.");
     } catch (err: any) {
       console.error("Error fetching leaderboard (caught):", err.message);
       setError("Failed to load leaderboard data. Please check the console for details.");
