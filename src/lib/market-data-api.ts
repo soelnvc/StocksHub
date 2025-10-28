@@ -307,34 +307,42 @@ const symbolToNameMap: { [key: string]: string } = {
 // Define the base volatility for individual stock price fluctuations
 const STOCK_VOLATILITY = 0.02; // +/- 1% fluctuation
 
+// Store current simulated state for indices and stocks
+let currentNiftyValue = initialIndexValues.NIFTY50;
+let currentSensexValue = initialIndexValues.SENSEX;
+
+// Use a Map to store all simulated stocks for efficient lookup and dynamic addition
+const allSimulatedStocks = new Map<string, TopStock>();
+
 // Function to generate a random stock entry
-const generateRandomStock = (index: number): TopStock => {
-  const baseSymbol = commonSymbols[index % commonSymbols.length];
-  const uniqueSuffix = Math.floor(index / commonSymbols.length) > 0 ? `-${Math.floor(index / commonSymbols.length)}` : '';
-  const symbol = `${baseSymbol}${uniqueSuffix}`;
-
-  // Use the map for common names, fallback to generic
-  const name = symbolToNameMap[baseSymbol] || `${symbol} Corporation`;
-
+const generateRandomStock = (symbol: string): TopStock => {
+  const name = symbolToNameMap[symbol] || `${symbol} Corporation`;
   const price = parseFloat((Math.random() * 1000 + 50).toFixed(2)); // Price between 50 and 1050
   return { symbol, name, price, change: 0, change_percent: 0 };
 };
 
-const generateInitialTopStocks = (count: number): TopStock[] => {
-  const stocks: TopStock[] = [];
-  for (let i = 0; i < count; i++) {
-    stocks.push(generateRandomStock(i));
+// Initialize allSimulatedStocks with common symbols
+const initializeSimulatedStocks = () => {
+  if (allSimulatedStocks.size === 0) { // Only initialize once
+    commonSymbols.forEach(symbol => {
+      allSimulatedStocks.set(symbol, generateRandomStock(symbol));
+    });
   }
-  return stocks;
+};
+initializeSimulatedStocks(); // Call once on module load
+
+// Function to get or create a simulated stock
+export const getOrCreateSimulatedStock = (symbol: string): TopStock => {
+  const upperSymbol = symbol.toUpperCase();
+  if (!allSimulatedStocks.has(upperSymbol)) {
+    console.log(`Generating new simulated stock for symbol: ${upperSymbol}`);
+    allSimulatedStocks.set(upperSymbol, generateRandomStock(upperSymbol));
+  }
+  return allSimulatedStocks.get(upperSymbol)!;
 };
 
-// Store current simulated state for indices and stocks
-let currentNiftyValue = initialIndexValues.NIFTY50;
-let currentSensexValue = initialIndexValues.SENSEX;
-let currentTopStocks: TopStock[] = generateInitialTopStocks(200); // Generate 200 stocks initially
-
 // Simulate price fluctuations
-const simulateFluctuation = (basePrice: number, volatility: number = STOCK_VOLATILITY) => { // Use STOCK_VOLATILITY as default
+const simulateFluctuation = (basePrice: number, volatility: number = STOCK_VOLATILITY) => {
   const fluctuation = (Math.random() - 0.5) * volatility;
   return basePrice * (1 + fluctuation);
 };
@@ -443,27 +451,28 @@ export const fetchIndicesData = async (timeRange: TimeRange = '1h'): Promise<Ind
 
 /**
  * Simulates fetching real-time data for top stocks.
- * This function also updates the internal state of currentTopStocks.
+ * This function also updates the internal state of allSimulatedStocks.
  * @returns A Promise that resolves with an array of TopStock.
  */
 export const fetchTopStocks = async (): Promise<TopStock[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      currentTopStocks = currentTopStocks.map((stock: TopStock) => {
+      // Update prices for all currently simulated stocks
+      allSimulatedStocks.forEach((stock, symbol) => {
         const oldPrice = stock.price;
-        const newPrice = simulateFluctuation(stock.price, STOCK_VOLATILITY); // Use consistent STOCK_VOLATILITY
+        const newPrice = simulateFluctuation(stock.price, STOCK_VOLATILITY);
         const change = newPrice - oldPrice;
         const change_percent = (change / oldPrice) * 100;
-        return {
+        allSimulatedStocks.set(symbol, {
           ...stock,
           price: parseFloat(newPrice.toFixed(2)),
           change: parseFloat(change.toFixed(2)),
           change_percent: parseFloat(change_percent.toFixed(2)),
-        };
+        });
       });
       // Sort by change_percent for "top" stocks (can be customized)
-      currentTopStocks.sort((a: TopStock, b: TopStock) => b.change_percent - a.change_percent);
-      resolve(currentTopStocks); // Return all 200 stocks
+      const sortedStocks = Array.from(allSimulatedStocks.values()).sort((a: TopStock, b: TopStock) => b.change_percent - a.change_percent);
+      resolve(sortedStocks);
     }, 1000 + Math.random() * 500); // Simulate network delay
   });
 };
@@ -471,5 +480,5 @@ export const fetchTopStocks = async (): Promise<TopStock[]> => {
 // Export a function to get the current state of all simulated stocks
 // This will be used by stock-api.ts to ensure consistent pricing
 export const getAllSimulatedStocks = (): TopStock[] => {
-  return currentTopStocks;
+  return Array.from(allSimulatedStocks.values());
 };

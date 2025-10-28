@@ -1,6 +1,6 @@
 // src/lib/stock-api.ts
 
-import { getAllSimulatedStocks } from "@/lib/market-data-api"; // Import from market-data-api
+import { getOrCreateSimulatedStock } from "@/lib/market-data-api"; // Import the new function
 
 interface StockPrice {
   symbol: string;
@@ -18,17 +18,17 @@ export const fetchStockPrice = async (symbol: string): Promise<StockPrice | null
   return new Promise((resolve) => {
     setTimeout(() => {
       const upperSymbol = symbol.toUpperCase();
-      const allStocks = getAllSimulatedStocks(); // Get the latest simulated stocks
-      const foundStock = allStocks.find(s => s.symbol === upperSymbol);
+      const foundStock = getOrCreateSimulatedStock(upperSymbol); // Use getOrCreateSimulatedStock
 
       if (foundStock) {
         resolve({
           symbol: upperSymbol,
-          price: foundStock.price, // Use the price from the unified source
+          price: foundStock.price,
           timestamp: Date.now(),
         });
       } else {
-        resolve(null); // Stock not found
+        // This case should theoretically not be reached with getOrCreateSimulatedStock
+        resolve(null);
       }
     }, 500 + Math.random() * 500); // Simulate network delay
   });

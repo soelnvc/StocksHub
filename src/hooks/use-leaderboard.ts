@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
-import { fetchTopStocks, TopStock } from "@/lib/market-data-api";
+import { getAllSimulatedStocks } from "@/lib/market-data-api"; // Import getAllSimulatedStocks
+import { fetchStockPrice } from "@/lib/stock-api"; // Import fetchStockPrice to ensure symbols are created
 
 interface LeaderboardEntry {
   rank: number;
@@ -53,21 +54,30 @@ export const useLeaderboard = (): UseLeaderboardResult => {
     setIsLoading(true);
     setError(null);
     try {
-      const [
-        { data: balancesData, error: balancesError },
-        { data: stocksData, error: stocksError },
-        allCurrentStocks
-      ] = await Promise.all([
-        supabase.from("user_balances").select(`user_id, balance, profiles (first_name, last_name)`),
-        supabase.from("user_stocks").select(`user_id, stock_symbol, quantity, average_buy_price`),
-        fetchTopStocks()
-      ]);
+      const [{ data: balancesData, error: balancesError }, { data: stocksData, error: stocksError }] =
+        await Promise.all([
+          supabase.from("user_balances").select(`user_id, balance, profiles (first_name, last_name)`),
+          supabase.from("user_stocks").select(`user_id, stock_symbol, quantity, average_buy_price`),
+        ]);
 
       if (balancesError) throw balancesError;
       if (stocksError) throw stocksError;
 
+      // Collect all unique stock symbols from user portfolios
+      const uniqueStockSymbols = new Set<string>();
+      (stocksData as SupabaseUserStockRawEntry[] || []).forEach(stockHolding => {
+        uniqueStockSymbols.add(stockHolding.stock_symbol);
+      });
+      console.log("Leaderboard: Unique stock symbols found in user portfolios:", Array.from(uniqueStockSymbols));
+
+      // Ensure prices are generated/updated for all these symbols
+      await Promise.all(Array.from(uniqueStockSymbols).map(symbol => fetchStockPrice(symbol)));
+      console.log("Leaderboard: Ensured prices for all unique stock symbols.");
+
+      // Now get all simulated stocks (including any newly created ones)
+      const allCurrentSimulatedStocks = getAllSimulatedStocks();
       const stockPricesMap = new Map<string, number>();
-      allCurrentStocks.forEach((stock: TopStock) => stockPricesMap.set(stock.symbol, stock.price));
+      allCurrentSimulatedStocks.forEach(stock => stockPricesMap.set(stock.symbol, stock.price));
       console.log("Leaderboard: Current simulated stock prices (full map):", Object.fromEntries(stockPricesMap));
 
 
@@ -107,7 +117,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
             average_buy_price: stockHolding.average_buy_price
           });
           userHoldingsMap.set(userId, userEntry);
-          console.log(`Leaderboard: User ${userEntry.firstName || 'Anonymous'} (${userId}) added stock: ${stockHolding.stock_symbol}, Qty: ${stockHolding.quantity}`);
+          console.log(`  - User ${userEntry.firstName || 'Anonymous'} (${userId}) added stock: ${stockHolding.stock_symbol}, Qty: ${stockHolding.quantity}`);
         } else {
           // This case should ideally not happen if all users have a balance entry
           // If it does, it means a user has stocks but no balance entry, which is an inconsistency.
