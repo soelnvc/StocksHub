@@ -15,6 +15,7 @@ serve(async (req: Request) => {
   // Manual authentication handling (since verify_jwt is false)
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
+    console.error("AI Mentor: Unauthorized - No Authorization header");
     return new Response('Unauthorized', {
       status: 401,
       headers: corsHeaders,
@@ -30,6 +31,7 @@ serve(async (req: Request) => {
 
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
   if (userError || !user) {
+    console.error("AI Mentor: Unauthorized - Invalid user session", userError?.message);
     return new Response('Unauthorized', {
       status: 401,
       headers: corsHeaders,
@@ -43,6 +45,7 @@ serve(async (req: Request) => {
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (GEMINI_API_KEY) {
+      console.log("AI Mentor: GEMINI_API_KEY found. Attempting to call Gemini API.");
       try {
         const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
@@ -54,17 +57,23 @@ serve(async (req: Request) => {
           }),
         });
 
+        console.log(`AI Mentor: Gemini API response status: ${geminiResponse.status}`);
+
         if (geminiResponse.ok) {
           const data = await geminiResponse.json();
           aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "I couldn't generate a response from Gemini. Please try again.";
+          console.log("AI Mentor: Successfully received response from Gemini.");
         } else {
-          console.error('Gemini API error:', geminiResponse.status, await geminiResponse.text());
+          const errorBody = await geminiResponse.text();
+          console.error('AI Mentor: Gemini API error response:', geminiResponse.status, errorBody);
           aiResponse = "I'm having trouble connecting to my brain right now. Please try again later!";
         }
       } catch (apiError: any) {
-        console.error('Error calling Gemini API:', apiError);
+        console.error('AI Mentor: Error calling Gemini API:', apiError.message || apiError);
         aiResponse = "An error occurred while processing your request with the AI. Please try again.";
       }
+    } else {
+      console.warn("AI Mentor: GEMINI_API_KEY not found in environment variables. Using fallback response.");
     }
 
     return new Response(JSON.stringify({ response: aiResponse }), {
@@ -72,7 +81,7 @@ serve(async (req: Request) => {
       status: 200,
     });
   } catch (error: any) {
-    console.error("Error in AI mentor edge function:", error.message);
+    console.error("AI Mentor: Error in AI mentor edge function:", error.message);
     return new Response(JSON.stringify({ error: "Failed to process AI request." }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
