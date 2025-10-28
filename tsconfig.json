@@ -27,6 +27,6 @@
     }
   },
   "include": ["src"],
-  "exclude": ["supabase/functions"],
+  "exclude": ["node_modules", "dist", "supabase"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
