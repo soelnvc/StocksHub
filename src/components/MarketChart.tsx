@@ -24,7 +24,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatTooltip = (value: number, name: string, props: any) => {
+  const formatTooltip = (value: number, _name: string, props: any) => { // Renamed 'name' to '_name'
     const timestamp = props.payload.timestamp;
     const date = new Date(timestamp);
     return [

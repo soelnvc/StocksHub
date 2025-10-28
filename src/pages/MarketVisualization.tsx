@@ -1,10 +1,9 @@
-import React from "react";
 import Layout from "@/components/Layout";
 import { useMarketData } from "@/hooks/use-market-data";
 import MarketOverviewCard from "@/components/MarketOverviewCard";
 import TopStocksTable from "@/components/TopStocksTable";
 import MarketChart from "@/components/MarketChart";
-import { LineChart } from "lucide-react";
+
 
 const MarketVisualization = () => {
   const { indices, topStocks, isLoading, error } = useMarketData();
