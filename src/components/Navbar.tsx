@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, Trophy, Bot, User, TrendingUp, History } from "lucide-react"; // Import History icon
+import { LogOut, LayoutDashboard, Trophy, Bot, User, TrendingUp, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfileData } from "@/hooks/use-profile-data";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 const Navbar: React.FC = () => {
   const { user } = useSession();
+  const { profile, isLoadingProfileData } = useProfileData();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -23,21 +26,26 @@ const Navbar: React.FC = () => {
     navigate("/login");
   };
 
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
-    const parts = name.split(" ");
-    if (parts.length > 1) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
+  const getInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
+    let initials = "";
+    if (firstName) initials += firstName[0];
+    if (lastName) initials && (initials += lastName[0]);
+    return initials.toUpperCase() || "U";
   };
 
-  const userName = user?.user_metadata?.first_name || user?.email;
+  // Prioritize profile data, fall back to user metadata, then email
+  const displayFirstName = profile?.first_name || user?.user_metadata?.first_name;
+  const displayLastName = profile?.last_name || user?.user_metadata?.last_name;
+  const displayAvatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
+
+  const userName = displayFirstName && displayLastName
+    ? `${displayFirstName} ${displayLastName}`
+    : displayFirstName || user?.email;
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
     { name: "Trade", path: "/trade", icon: <TrendingUp className="h-4 w-4" /> },
-    { name: "Transactions", path: "/transactions", icon: <History className="h-4 w-4" /> }, // New Transactions link
+    { name: "Transactions", path: "/transactions", icon: <History className="h-4 w-4" /> },
     { name: "Leaderboard", path: "/leaderboard", icon: <Trophy className="h-4 w-4" /> },
     { name: "AI Mentor", path: "/ai-mentor", icon: <Bot className="h-4 w-4" /> },
     { name: "Profile", path: "/profile", icon: <User className="h-4 w-4" /> },
@@ -67,13 +75,17 @@ const Navbar: React.FC = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
-                    <AvatarFallback className="bg-blue-800 text-white">
-                      {getInitials(userName)}
-                    </AvatarFallback>
-                  </Avatar>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full" disabled={isLoadingProfileData}>
+                  {isLoadingProfileData ? (
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  ) : (
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={displayAvatarUrl || undefined} alt={userName || "User Avatar"} />
+                      <AvatarFallback className="bg-blue-800 text-white">
+                        {getInitials(displayFirstName, displayLastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
