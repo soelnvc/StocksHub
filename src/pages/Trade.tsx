@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStockPrice } from "@/hooks/use-stock-price";
+import { useUserPortfolio } from "@/hooks/use-user-portfolio"; // Import the new hook
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingUp } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
 
 const Trade = () => {
   const [symbolInput, setSymbolInput] = useState("");
   const [quantity, setQuantity] = useState<number | string>("");
-  const { stockData, isLoading, error, fetchPrice } = useStockPrice();
+  const { stockData, isLoading: isLoadingStockPrice, error: stockPriceError, fetchPrice } = useStockPrice();
+  const { balance, userStocks, isLoadingPortfolio, buyStock, sellStock, fetchPortfolio } = useUserPortfolio();
 
   const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSymbolInput(e.target.value.toUpperCase());
@@ -29,16 +32,35 @@ const Trade = () => {
     }
   };
 
-  // Placeholder for buy/sell logic (will be implemented in the next step)
-  const handleBuy = () => {
-    console.log(`Buying ${quantity} shares of ${symbolInput} at ${stockData?.price}`);
-    // Implement actual buy logic here
+  const handleBuy = async () => {
+    const numQuantity = Number(quantity);
+    if (!stockData || !numQuantity || numQuantity <= 0) {
+      showError("Please enter a valid stock symbol and a positive quantity.");
+      return;
+    }
+
+    const success = await buyStock(stockData.symbol, numQuantity, stockData.price);
+    if (success) {
+      setQuantity(""); // Clear quantity after successful trade
+      // Optionally, clear symbolInput or refetch stock price if desired
+    }
   };
 
-  const handleSell = () => {
-    console.log(`Selling ${quantity} shares of ${symbolInput} at ${stockData?.price}`);
-    // Implement actual sell logic here
+  const handleSell = async () => {
+    const numQuantity = Number(quantity);
+    if (!stockData || !numQuantity || numQuantity <= 0) {
+      showError("Please enter a valid stock symbol and a positive quantity.");
+      return;
+    }
+
+    const success = await sellStock(stockData.symbol, numQuantity, stockData.price);
+    if (success) {
+      setQuantity(""); // Clear quantity after successful trade
+      // Optionally, clear symbolInput or refetch stock price if desired
+    }
   };
+
+  const currentStockHolding = userStocks.find(s => s.stock_symbol === symbolInput);
 
   return (
     <Layout>
@@ -57,32 +79,47 @@ const Trade = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isLoadingPortfolio ? (
+                <Skeleton className="h-8 w-full" />
+              ) : (
+                <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
+                  <span>Your Balance:</span>
+                  <DollarSign className="h-4 w-4" />
+                  <span>{balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
+
               <div className="flex space-x-2">
                 <Input
                   placeholder="Stock Symbol (e.g., AAPL)"
                   className="dark:bg-gray-700 dark:text-white flex-grow"
                   value={symbolInput}
                   onChange={handleSymbolChange}
-                  onBlur={handleFetchPrice} // Fetch price when input loses focus
+                  onBlur={handleFetchPrice}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleFetchPrice();
                     }
                   }}
                 />
-                <Button onClick={handleFetchPrice} disabled={!symbolInput || isLoading}>
-                  {isLoading ? "Fetching..." : "Get Price"}
+                <Button onClick={handleFetchPrice} disabled={!symbolInput || isLoadingStockPrice}>
+                  {isLoadingStockPrice ? "Fetching..." : "Get Price"}
                 </Button>
               </div>
 
-              {isLoading && <Skeleton className="h-8 w-full" />}
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {isLoadingStockPrice && <Skeleton className="h-8 w-full" />}
+              {stockPriceError && <p className="text-red-500 text-sm">{stockPriceError}</p>}
               {stockData && (
                 <div className="text-lg font-medium text-gray-800 dark:text-white flex items-center justify-center space-x-1">
                   <span>Current Price:</span>
                   <DollarSign className="h-4 w-4" />
                   <span>{stockData.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
+              )}
+              {currentStockHolding && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  You own: {currentStockHolding.quantity} shares (Avg. Buy Price: ₹{currentStockHolding.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                </p>
               )}
 
               <Input
@@ -97,14 +134,14 @@ const Trade = () => {
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   onClick={handleBuy}
-                  disabled={!stockData || !quantity || isLoading}
+                  disabled={!stockData || !Number(quantity) || Number(quantity) <= 0 || isLoadingPortfolio}
                 >
                   Buy
                 </Button>
                 <Button
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                   onClick={handleSell}
-                  disabled={!stockData || !quantity || isLoading}
+                  disabled={!stockData || !Number(quantity) || Number(quantity) <= 0 || isLoadingPortfolio || !currentStockHolding || currentStockHolding.quantity < Number(quantity)}
                 >
                   Sell
                 </Button>
