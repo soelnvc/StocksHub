@@ -41,11 +41,23 @@ serve(async (req: Request) => {
   try {
     const { message: userMessage } = await req.json();
 
-    let aiResponse = `Hello ${user.user_metadata?.first_name || 'there'}! You asked: "${userMessage}". I'm currently under development, but I'm learning!`;
+    // Fetch user's first name from the public.profiles table
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('first_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    let userName = profileData?.first_name || 'there';
+    if (profileError) {
+      console.warn("AI Mentor: Could not fetch profile first name:", profileError.message);
+    }
+
+    let aiResponse = `Hello ${userName}! You asked: "${userMessage}". I'm currently under development, but I'm learning!`;
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (GEMINI_API_KEY) {
-      console.log("AI Mentor: GEMINI_API_KEY environment variable is set.");
+      console.log("AI Mentor: GEMINI_API_KEY environment variable is set. Attempting Gemini API call.");
       try {
         const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
@@ -61,7 +73,7 @@ serve(async (req: Request) => {
 
         if (geminiResponse.ok) {
           const data = await geminiResponse.json();
-          console.log("AI Mentor: Full Gemini API response data:", JSON.stringify(data)); // Log full data
+          console.log("AI Mentor: Full Gemini API response data:", JSON.stringify(data));
 
           const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
           if (generatedText) {

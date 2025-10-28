@@ -51,6 +51,10 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         throw supabaseError;
       }
 
+      // --- DEBUGGING LOG ---
+      console.log("Raw Supabase data for leaderboard:", data);
+      // --- END DEBUGGING LOG ---
+
       const sortedLeaderboard: LeaderboardEntry[] = (data as SupabaseLeaderboardRawEntry[] || []).map((entry, index) => ({
         rank: index + 1,
         user_id: entry.user_id,
