@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,13 +7,13 @@ import { useStockPrice } from "@/hooks/use-stock-price";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingUp } from "lucide-react";
-import { showError } from "@/utils/toast"; // Removed showSuccess
+import { showError } from "@/utils/toast";
 
 const Trade = () => {
   const [symbolInput, setSymbolInput] = useState("");
   const [quantity, setQuantity] = useState<number | string>("");
   const { stockData, isLoading: isLoadingStockPrice, error: stockPriceError, fetchPrice } = useStockPrice();
-  const { balance, userStocks, isLoadingPortfolio, buyStock, sellStock } = useUserPortfolio(); // Removed fetchPortfolio
+  const { balance, userStocks, isLoadingPortfolio, buyStock, sellStock } = useUserPortfolio();
 
   const handleSymbolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSymbolInput(e.target.value.toUpperCase());
@@ -42,7 +42,6 @@ const Trade = () => {
     const success = await buyStock(stockData.symbol, numQuantity, stockData.price);
     if (success) {
       setQuantity(""); // Clear quantity after successful trade
-      // Optionally, clear symbolInput or refetch stock price if desired
     }
   };
 
@@ -56,11 +55,19 @@ const Trade = () => {
     const success = await sellStock(stockData.symbol, numQuantity, stockData.price);
     if (success) {
       setQuantity(""); // Clear quantity after successful trade
-      // Optionally, clear symbolInput or refetch stock price if desired
     }
   };
 
-  const currentStockHolding = userStocks.find(s => s.stock_symbol === symbolInput);
+  const currentStockHolding = useMemo(() => {
+    return userStocks.find(s => s.stock_symbol === symbolInput);
+  }, [userStocks, symbolInput]);
+
+  const estimatedValue = useMemo(() => {
+    if (stockData && Number(quantity) > 0) {
+      return (stockData.price * Number(quantity)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return null;
+  }, [stockData, quantity]);
 
   return (
     <Layout>
@@ -130,6 +137,13 @@ const Trade = () => {
                 onChange={handleQuantityChange}
                 min="1"
               />
+
+              {estimatedValue && (
+                <p className="text-md font-semibold text-gray-700 dark:text-gray-300">
+                  Estimated {Number(quantity) > 0 && currentStockHolding && currentStockHolding.quantity >= Number(quantity) ? "Proceeds" : "Cost"}: ₹{estimatedValue}
+                </p>
+              )}
+
               <div className="flex space-x-4">
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
