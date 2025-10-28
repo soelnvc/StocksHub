@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, Trophy, Bot, User, TrendingUp, History } from "lucide-react"; // Import History icon
+import { LogOut, LayoutDashboard, Trophy, Bot, User, TrendingUp, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileNav from "./MobileNav"; // Import the new MobileNav component
 
 const Navbar: React.FC = () => {
   const { user } = useSession();
@@ -37,7 +38,7 @@ const Navbar: React.FC = () => {
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
     { name: "Trade", path: "/trade", icon: <TrendingUp className="h-4 w-4" /> },
-    { name: "Transactions", path: "/transactions", icon: <History className="h-4 w-4" /> }, // New Transactions link
+    { name: "Transactions", path: "/transactions", icon: <History className="h-4 w-4" /> },
     { name: "Leaderboard", path: "/leaderboard", icon: <Trophy className="h-4 w-4" /> },
     { name: "AI Mentor", path: "/ai-mentor", icon: <Bot className="h-4 w-4" /> },
     { name: "Profile", path: "/profile", icon: <User className="h-4 w-4" /> },
@@ -46,9 +47,12 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/dashboard" className="text-2xl font-bold">
-          StockSim
-        </Link>
+        <div className="flex items-center space-x-4">
+          {user && isMobile && <MobileNav navItems={navItems} />} {/* Mobile navigation trigger */}
+          <Link to="/dashboard" className="text-2xl font-bold">
+            StockSim
+          </Link>
+        </div>
 
         {user && (
           <div className="flex items-center space-x-4">
@@ -83,16 +87,7 @@ const Navbar: React.FC = () => {
                     {user?.email}
                   </p>
                 </div>
-                {isMobile && (
-                  <>
-                    {navItems.map((item) => (
-                      <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
-                        {item.icon}
-                        <span className="ml-2">{item.name}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
+                {/* Removed mobile nav items from dropdown as they are now in MobileNav */}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
