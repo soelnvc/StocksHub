@@ -11,7 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
 import AIMentor from "./pages/AIMentor";
 import Profile from "./pages/Profile";
-import Trade from "./pages/Trade"; // Import the new Trade page
+import Trade from "./pages/Trade";
+import TransactionHistory from "./pages/TransactionHistory"; // Import the new TransactionHistory page
 import { SessionContextProvider } from "./contexts/SessionContext";
 import AuthGuard from "./components/AuthGuard";
 
@@ -33,7 +34,8 @@ const App = () => (
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/ai-mentor" element={<AIMentor />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/trade" element={<Trade />} /> {/* Add the new Trade route */}
+              <Route path="/trade" element={<Trade />} />
+              <Route path="/transactions" element={<TransactionHistory />} /> {/* Add the new TransactionHistory route */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
