@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, LayoutDashboard, Trophy, Bot, User } from "lucide-react";
+import { LogOut, LayoutDashboard, Trophy, Bot, User, TrendingUp } from "lucide-react"; // Import TrendingUp icon
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,7 @@ const Navbar: React.FC = () => {
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { name: "Trade", path: "/trade", icon: <TrendingUp className="h-4 w-4" /> }, // New Trade link
     { name: "Leaderboard", path: "/leaderboard", icon: <Trophy className="h-4 w-4" /> },
     { name: "AI Mentor", path: "/ai-mentor", icon: <Bot className="h-4 w-4" /> },
     { name: "Profile", path: "/profile", icon: <User className="h-4 w-4" /> },
