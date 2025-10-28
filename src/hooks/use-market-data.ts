@@ -55,7 +55,7 @@ export const useMarketData = (): UseMarketDataResult => {
 
   useEffect(() => {
     fetchMarketData();
-    const interval = setInterval(fetchMarketData, 15000); // Refresh every 15 seconds
+    const interval = setInterval(fetchMarketData, 300000); // Refresh every 5 minutes (300000 ms)
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
