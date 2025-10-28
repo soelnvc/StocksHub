@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Leaderboard from "./pages/Leaderboard";
-// Removed: import AIMentor from "./pages/AIMentor";
+import AIMentor from "./pages/AIMentor"; // Re-added
 import Profile from "./pages/Profile";
 import Trade from "./pages/Trade";
 import TransactionHistory from "./pages/TransactionHistory";
@@ -34,7 +34,7 @@ const App = () => {
                 <Route index element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
-                {/* Removed: <Route path="/ai-mentor" element={<AIMentor />} /> */}
+                <Route path="/ai-mentor" element={<AIMentor />} /> {/* Re-added */}
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trade" element={<Trade />} />
                 <Route path="/transactions" element={<TransactionHistory />} />
