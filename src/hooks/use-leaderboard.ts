@@ -10,6 +10,7 @@ interface LeaderboardEntry {
   balance: number;
 }
 
+// Corrected interface: 'profiles' is an array of objects
 interface SupabaseLeaderboardRawEntry {
   user_id: string;
   balance: number;
@@ -46,15 +47,16 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         .order("balance", { ascending: false }); // Order by balance descending
 
       if (supabaseError) {
-        console.error("Supabase Leaderboard Error:", supabaseError); // Log the full error object
+        console.error("Supabase Leaderboard Error:", supabaseError);
         throw supabaseError;
       }
 
       const sortedLeaderboard: LeaderboardEntry[] = (data as SupabaseLeaderboardRawEntry[] || []).map((entry, index) => ({
         rank: index + 1,
         user_id: entry.user_id,
-        first_name: entry.profiles?.[0]?.first_name || null, // Access first element of the array
-        last_name: entry.profiles?.[0]?.last_name || null,   // Access first element of the array
+        // Access the first element of the profiles array
+        first_name: entry.profiles?.[0]?.first_name || null,
+        last_name: entry.profiles?.[0]?.last_name || null,
         balance: entry.balance,
       }));
 
