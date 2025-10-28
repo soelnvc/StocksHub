@@ -3,7 +3,7 @@ import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { updateGamificationOnTrade } from "@/utils/gamification";
-import { fetchTopStocks } from "@/lib/market-data-api"; // Import fetchTopStocks
+import { fetchStockPrice } from "@/lib/stock-api";
 import { formatCurrency } from "@/utils/currency"; // Import the new utility
 
 interface UserStock {
@@ -45,34 +45,32 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     let calculatedTotalProfitLoss = 0;
     const updatedStocks: UserStock[] = [];
 
-    // Fetch all current stock prices from the market data API
-    const allCurrentStocks = await fetchTopStocks();
-    const stockPricesMap = new Map<string, number>();
-    allCurrentStocks.forEach(stock => stockPricesMap.set(stock.symbol, stock.price));
-
     if (currentStocks.length > 0) {
-      currentStocks.forEach((stock) => {
-        const currentPrice = stockPricesMap.get(stock.stock_symbol) || null; // Get price from the map
-        const currentValue = currentPrice !== null ? currentPrice * stock.quantity : null;
-        const totalBuyCost = stock.average_buy_price * stock.quantity;
-        const profitLoss = currentValue !== null ? currentValue - totalBuyCost : null;
-        const profitLossPerShare = currentPrice !== null ? currentPrice - stock.average_buy_price : null;
+      await Promise.all(
+        currentStocks.map(async (stock) => {
+          const priceData = await fetchStockPrice(stock.stock_symbol);
+          const currentPrice = priceData?.price || null;
+          const currentValue = currentPrice !== null ? currentPrice * stock.quantity : null;
+          const totalBuyCost = stock.average_buy_price * stock.quantity;
+          const profitLoss = currentValue !== null ? currentValue - totalBuyCost : null;
+          const profitLossPerShare = currentPrice !== null ? currentPrice - stock.average_buy_price : null;
 
-        if (currentValue !== null) {
-          calculatedTotalStockValue += currentValue;
-        }
-        if (profitLoss !== null) {
-          calculatedTotalProfitLoss += profitLoss;
-        }
+          if (currentValue !== null) {
+            calculatedTotalStockValue += currentValue;
+          }
+          if (profitLoss !== null) {
+            calculatedTotalProfitLoss += profitLoss;
+          }
 
-        updatedStocks.push({
-          ...stock,
-          current_price: currentPrice,
-          current_value: currentValue,
-          profit_loss_per_share: profitLossPerShare,
-          total_profit_loss: profitLoss,
-        });
-      });
+          updatedStocks.push({
+            ...stock,
+            current_price: currentPrice,
+            current_value: currentValue,
+            profit_loss_per_share: profitLossPerShare,
+            total_profit_loss: profitLoss,
+          });
+        })
+      );
     }
 
     setTotalStockValue(calculatedTotalStockValue);
