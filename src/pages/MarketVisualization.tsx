@@ -1,8 +1,9 @@
+import { useState } from "react"; // Import useState
 import Layout from "@/components/Layout";
 import { useMarketData } from "@/hooks/use-market-data";
 import MarketOverviewCard from "@/components/MarketOverviewCard";
 import TopStocksTable from "@/components/TopStocksTable";
-import AllStocksTable from "@/components/AllStocksTable"; // Import the new component
+import AllStocksTable from "@/components/AllStocksTable";
 import MarketChart from "@/components/MarketChart";
 import {
   Select,
@@ -11,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TimeRange } from "@/lib/market-data-api"; // Import TimeRange
+import { Input } from "@/components/ui/input"; // Import Input component
+import { TimeRange } from "@/lib/market-data-api";
 
 const MarketVisualization = () => {
   const { indices, topStocks, isLoading, error, timeRange, setTimeRange } = useMarketData();
+  const [searchTerm, setSearchTerm] = useState(""); // New state for search term
 
   const niftyData = indices.find(index => index.name === "NIFTY50");
   const sensexData = indices.find(index => index.name === "SENSEX");
@@ -22,6 +25,12 @@ const MarketVisualization = () => {
   const handleTimeRangeChange = (value: string) => {
     setTimeRange(value as TimeRange);
   };
+
+  // Filter stocks based on search term
+  const filteredStocks = topStocks.filter(stock =>
+    stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Layout>
@@ -91,14 +100,24 @@ const MarketVisualization = () => {
 
           {/* Top 5 Stocks Table */}
           <TopStocksTable
-            topStocks={topStocks.slice(0, 5)} // Pass only the top 5 to the existing component
+            topStocks={topStocks.slice(0, 5)}
             isLoading={isLoading}
             error={error}
           />
 
+          {/* Search Input for All Stocks */}
+          <div className="w-full max-w-6xl">
+            <Input
+              placeholder="Search by symbol or company name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+
           {/* All Stocks Table */}
           <AllStocksTable
-            stocks={topStocks} // Pass the full list of stocks
+            stocks={filteredStocks} // Pass the filtered list
             isLoading={isLoading}
             error={error}
           />
