@@ -3,11 +3,10 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, Flame, History } from "lucide-react"; // Import History icon
+import { Wallet, Package, Award, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
-import { useTransactions } from "@/hooks/use-transactions"; // Import useTransactions hook
 import {
   Table,
   TableBody,
@@ -22,7 +21,6 @@ const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { balance, userStocks, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
   const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
-  const { transactions, isLoadingTransactions, error: transactionsError, fetchTransactions } = useTransactions(); // Use transactions hook
 
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +58,11 @@ const Dashboard = () => {
       fetchInitialBalance();
       fetchPortfolio();
       fetchGamificationData();
-      fetchTransactions(); // Fetch transactions on mount
     }
-  }, [user, isSessionLoading, fetchPortfolio, fetchGamificationData, fetchTransactions]);
+  }, [user, isSessionLoading, fetchPortfolio, fetchGamificationData]);
 
-  const displayLoading = isLoadingBalance || isLoadingPortfolio || isLoadingGamification || isLoadingTransactions;
-  const displayError = error || portfolioError || gamificationError || transactionsError;
-
-  const recentTransactions = transactions.slice(0, 5); // Show only the 5 most recent transactions
+  const displayLoading = isLoadingBalance || isLoadingPortfolio || isLoadingGamification;
+  const displayError = error || portfolioError || gamificationError;
 
   return (
     <Layout>
@@ -174,63 +169,6 @@ const Dashboard = () => {
                         <TableCell>{stock.quantity}</TableCell>
                         <TableCell className="text-right">
                           ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="w-full max-w-4xl bg-white dark:bg-gray-800 shadow-lg mb-8">
-          <CardHeader className="border-b dark:border-gray-700">
-            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
-              <History className="h-5 w-5" />
-              <span>Recent Transactions</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {displayLoading ? (
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ) : displayError ? (
-              <p className="text-red-500 text-center py-4">{displayError}</p>
-            ) : recentTransactions.length === 0 ? (
-              <p className="text-gray-600 dark:text-gray-400 text-center py-4">
-                No recent transactions. Start trading!
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[100px]">Type</TableHead>
-                      <TableHead>Symbol</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Time</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <span className={`font-medium ${transaction.type === 'buy' ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.type.toUpperCase()}
-                          </span>
-                        </TableCell>
-                        <TableCell className="font-medium">{transaction.stock_symbol}</TableCell>
-                        <TableCell>{transaction.quantity}</TableCell>
-                        <TableCell className="text-right">
-                          ₹{transaction.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {new Date(transaction.transaction_time).toLocaleString()}
                         </TableCell>
                       </TableRow>
                     ))}
