@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
-import { fetchTopStocks, TopStock } from "@/lib/market-data-api"; // Import fetchTopStocks and TopStock
+import { fetchTopStocks, TopStock } from "@/lib/market-data-api";
 
 interface LeaderboardEntry {
   rank: number;
@@ -12,7 +12,6 @@ interface LeaderboardEntry {
   total_portfolio_value: number; // Field for ranking based on total portfolio value
 }
 
-// New intermediate interface without the 'rank' property
 interface IntermediateLeaderboardEntry {
   user_id: string;
   first_name: string | null;
@@ -34,7 +33,7 @@ interface SupabaseUserStockRawEntry {
   user_id: string;
   stock_symbol: string;
   quantity: number;
-  average_buy_price: number; // Added to fetch average buy price
+  average_buy_price: number;
 }
 
 interface UseLeaderboardResult {
@@ -60,7 +59,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         allCurrentStocks
       ] = await Promise.all([
         supabase.from("user_balances").select(`user_id, balance, profiles (first_name, last_name)`),
-        supabase.from("user_stocks").select(`user_id, stock_symbol, quantity, average_buy_price`), // Fetch average_buy_price
+        supabase.from("user_stocks").select(`user_id, stock_symbol, quantity, average_buy_price`),
         fetchTopStocks()
       ]);
 
@@ -69,7 +68,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       const stockPricesMap = new Map<string, number>();
       allCurrentStocks.forEach((stock: TopStock) => stockPricesMap.set(stock.symbol, stock.price));
-      console.log("Leaderboard: Current simulated stock prices (sample):", Array.from(stockPricesMap.entries()).slice(0, 5));
+      console.log("Leaderboard: Current simulated stock prices (full map):", Object.fromEntries(stockPricesMap));
 
 
       const userHoldingsMap = new Map<string, {
@@ -94,6 +93,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           firstName,
           lastName
         });
+        console.log(`Leaderboard: Initializing user ${firstName || 'Anonymous'} (${userId}) with balance: ${entry.balance}`);
       });
 
       // Add stock holdings to each user
@@ -107,10 +107,13 @@ export const useLeaderboard = (): UseLeaderboardResult => {
             average_buy_price: stockHolding.average_buy_price
           });
           userHoldingsMap.set(userId, userEntry);
+          console.log(`Leaderboard: User ${userEntry.firstName || 'Anonymous'} (${userId}) added stock: ${stockHolding.stock_symbol}, Qty: ${stockHolding.quantity}`);
         } else {
           // This case should ideally not happen if all users have a balance entry
+          // If it does, it means a user has stocks but no balance entry, which is an inconsistency.
+          // For robustness, we should probably initialize a default balance here.
           userHoldingsMap.set(userId, {
-            balance: 0,
+            balance: 0, // Default balance if no entry found
             stocks: [{
               stock_symbol: stockHolding.stock_symbol,
               quantity: stockHolding.quantity,
@@ -119,18 +122,25 @@ export const useLeaderboard = (): UseLeaderboardResult => {
             firstName: null,
             lastName: null
           });
+          console.warn(`Leaderboard: User ${userId} has stocks but no balance entry. Initializing with 0 balance.`);
         }
       });
 
-      const rawLeaderboard: IntermediateLeaderboardEntry[] = []; // Use the intermediate interface here
+      const rawLeaderboard: IntermediateLeaderboardEntry[] = [];
 
       for (const [userId, userData] of userHoldingsMap.entries()) {
         let totalStockValue = 0;
+        console.log(`Leaderboard: Calculating portfolio for ${userData.firstName || 'Anonymous'} (${userId}). Current Balance: ${userData.balance}`);
 
         for (const stock of userData.stocks) {
-          const currentPrice = stockPricesMap.get(stock.stock_symbol) || 0;
-          const currentValue = currentPrice * stock.quantity;
+          const currentPrice = stockPricesMap.get(stock.stock_symbol);
+          if (currentPrice === undefined) {
+            console.warn(`Leaderboard: Stock price not found for symbol '${stock.stock_symbol}' for user ${userId}. Assuming price 0 for calculation.`);
+          }
+          const actualCurrentPrice = currentPrice || 0;
+          const currentValue = actualCurrentPrice * stock.quantity;
           totalStockValue += currentValue;
+          console.log(`  - Stock: ${stock.stock_symbol}, Qty: ${stock.quantity}, Current Price: ${actualCurrentPrice.toFixed(2)}, Value: ${currentValue.toFixed(2)}`);
         }
 
         const totalPortfolioValue = userData.balance + totalStockValue;
@@ -142,7 +152,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           balance: userData.balance,
           total_portfolio_value: totalPortfolioValue,
         });
-        console.log(`Leaderboard: User ${userData.firstName || 'Anonymous'} (${userId}) - Calculated Portfolio Value: ${totalPortfolioValue.toFixed(2)}`);
+        console.log(`Leaderboard: User ${userData.firstName || 'Anonymous'} (${userId}) - Final Calculated Portfolio Value: ${totalPortfolioValue.toFixed(2)}`);
       }
 
       // Sort by total_portfolio_value in descending order
