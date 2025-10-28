@@ -24,7 +24,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatTooltip = (value: number, _name: string, props: any) => { // Renamed 'name' to '_name'
+  const formatTooltip = (value: number, _name: string, props: any) => {
     const timestamp = props.payload.timestamp;
     const date = new Date(timestamp);
     return [
@@ -34,13 +34,13 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-800 shadow-lg h-full">
+    <Card className="bg-white dark:bg-gray-800 shadow-lg h-full flex flex-col"> {/* Added h-full and flex flex-col */}
       <CardHeader className="border-b dark:border-gray-700">
         <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">
           {title} Trend (Last Hour)
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 h-[calc(100%-70px)]"> {/* Adjust height based on header */}
+      <CardContent className="flex-grow p-4 overflow-hidden"> {/* Changed height to flex-grow and added overflow-hidden */}
         {isLoading ? (
           <Skeleton className="h-full w-full" />
         ) : error ? (
