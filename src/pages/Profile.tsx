@@ -1,31 +1,55 @@
+import { useState, useEffect } from "react"; // Import useState and useEffect
 import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
-import { useGamification } from "@/hooks/use-gamification"; // Import useGamification
+import { useGamification } from "@/hooks/use-gamification";
+import { useProfileData } from "@/hooks/use-profile-data"; // Import useProfileData
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, DollarSign, Award, Flame, Package } from "lucide-react"; // Import new icons
-import { Badge } from "@/components/ui/badge"; // Import Badge component
+import { Mail, DollarSign, Award, Flame, Package, Edit } from "lucide-react"; // Import Edit icon
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Import Button
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"; // Import Dialog components
+import EditProfileForm from "@/components/EditProfileForm"; // Import EditProfileForm
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { balance, isLoadingPortfolio } = useUserPortfolio();
-  const { xpData, streakData, badges, isLoadingGamification } = useGamification(); // Get gamification data
+  const { xpData, streakData, badges, isLoadingGamification } = useGamification();
+  const { profile, isLoadingProfileData, fetchProfileData } = useProfileData(); // Use the new hook
 
-  const isLoading = isSessionLoading || isLoadingPortfolio || isLoadingGamification;
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for dialog
+
+  const isLoading = isSessionLoading || isLoadingPortfolio || isLoadingGamification || isLoadingProfileData;
 
   const getInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
     let initials = "";
     if (firstName) initials += firstName[0];
-    if (lastName) initials += lastName[0];
+    if (lastName) initials && (initials += lastName[0]); // Only add if lastName exists
     return initials.toUpperCase() || "U";
   };
 
-  const firstName = user?.user_metadata?.first_name;
-  const lastName = user?.user_metadata?.last_name;
+  // Use profile data from the new hook
+  const firstName = profile?.first_name;
+  const lastName = profile?.last_name;
   const fullName = `${firstName || ''} ${lastName || ''}`.trim();
-  const avatarUrl = user?.user_metadata?.avatar_url;
+  const avatarUrl = profile?.avatar_url;
+
+  // Ensure profile data is fetched when user is available
+  useEffect(() => {
+    if (!isSessionLoading && user) {
+      fetchProfileData();
+    }
+  }, [user, isSessionLoading, fetchProfileData]);
+
 
   return (
     <Layout>
@@ -43,7 +67,7 @@ const Profile = () => {
                 <Skeleton className="h-24 w-24 rounded-full" />
               ) : (
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={avatarUrl} alt={fullName || "User Avatar"} />
+                  <AvatarImage src={avatarUrl || undefined} alt={fullName || "User Avatar"} />
                   <AvatarFallback className="bg-blue-600 text-white text-3xl">
                     {getInitials(firstName, lastName)}
                   </AvatarFallback>
@@ -75,6 +99,22 @@ const Profile = () => {
               <p className="text-sm text-muted-foreground mt-2">
                 Your current virtual trading balance.
               </p>
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="mt-4">
+                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                    <DialogDescription>
+                      Make changes to your profile here. Click save when you're done.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <EditProfileForm onClose={() => setIsEditDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
 
