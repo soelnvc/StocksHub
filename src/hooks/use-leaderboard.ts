@@ -45,7 +45,10 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         `)
         .order("balance", { ascending: false }); // Order by balance descending
 
-      if (supabaseError) throw supabaseError;
+      if (supabaseError) {
+        console.error("Supabase Leaderboard Error:", supabaseError); // Log the full error object
+        throw supabaseError;
+      }
 
       const sortedLeaderboard: LeaderboardEntry[] = (data as SupabaseLeaderboardRawEntry[] || []).map((entry, index) => ({
         rank: index + 1,
@@ -57,8 +60,8 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       setLeaderboard(sortedLeaderboard);
     } catch (err: any) {
-      console.error("Error fetching leaderboard:", err.message);
-      setError("Failed to load leaderboard data.");
+      console.error("Error fetching leaderboard (caught):", err.message);
+      setError("Failed to load leaderboard data. Please check the console for details.");
       showError("Failed to load leaderboard data.");
     } finally {
       setIsLoading(false);
