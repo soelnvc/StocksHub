@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => { // Explicitly type 'req' as Request
+serve(async (req: Request) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -41,31 +41,28 @@ serve(async (req: Request) => { // Explicitly type 'req' as Request
 
     let aiResponse = `Hello ${user.user_metadata?.first_name || 'there'}! You asked: "${userMessage}". I'm currently under development, but I'm learning!`;
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (OPENAI_API_KEY) {
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (GEMINI_API_KEY) {
       try {
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENAI_API_KEY}`,
           },
           body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
-            messages: [{ role: 'user', content: userMessage }],
-            max_tokens: 150,
+            contents: [{ parts: [{ text: userMessage }] }],
           }),
         });
 
-        if (openaiResponse.ok) {
-          const data = await openaiResponse.json();
-          aiResponse = data.choices[0].message.content.trim();
+        if (geminiResponse.ok) {
+          const data = await geminiResponse.json();
+          aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "I couldn't generate a response from Gemini. Please try again.";
         } else {
-          console.error('OpenAI API error:', openaiResponse.status, await openaiResponse.text());
+          console.error('Gemini API error:', geminiResponse.status, await geminiResponse.text());
           aiResponse = "I'm having trouble connecting to my brain right now. Please try again later!";
         }
-      } catch (apiError: any) { // Explicitly type 'apiError'
-        console.error('Error calling OpenAI API:', apiError);
+      } catch (apiError: any) {
+        console.error('Error calling Gemini API:', apiError);
         aiResponse = "An error occurred while processing your request with the AI. Please try again.";
       }
     }
@@ -74,7 +71,7 @@ serve(async (req: Request) => { // Explicitly type 'req' as Request
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
-  } catch (error: any) { // Explicitly type 'error'
+  } catch (error: any) {
     console.error("Error in AI mentor edge function:", error.message);
     return new Response(JSON.stringify({ error: "Failed to process AI request." }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
