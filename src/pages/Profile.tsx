@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react"; // Import useState and useEffect
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
-import { useProfileData } from "@/hooks/use-profile-data"; // Import useProfileData
+import { useProfileData } from "@/hooks/use-profile-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, DollarSign, Award, Flame, Package, Edit } from "lucide-react"; // Import Edit icon
+import { Mail, DollarSign, Award, Flame, Package, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Import Button
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,39 +17,37 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"; // Import Dialog components
-import EditProfileForm from "@/components/EditProfileForm"; // Import EditProfileForm
+} from "@/components/ui/dialog";
+import EditProfileForm from "@/components/EditProfileForm";
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { balance, isLoadingPortfolio } = useUserPortfolio();
   const { xpData, streakData, badges, isLoadingGamification } = useGamification();
-  const { profile, isLoadingProfileData, fetchProfileData } = useProfileData(); // Use the new hook
+  const { profile, isLoadingProfileData, fetchProfileData } = useProfileData();
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false); // State for dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const isLoading = isSessionLoading || isLoadingPortfolio || isLoadingGamification || isLoadingProfileData;
 
   const getInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
     let initials = "";
     if (firstName) initials += firstName[0];
-    if (lastName) initials && (initials += lastName[0]); // Only add if lastName exists
+    if (lastName) initials && (initials += lastName[0]);
     return initials.toUpperCase() || "U";
   };
 
-  // Use profile data from the new hook
+  // Use profile data from the new hook for display
   const firstName = profile?.first_name;
   const lastName = profile?.last_name;
   const fullName = `${firstName || ''} ${lastName || ''}`.trim();
   const avatarUrl = profile?.avatar_url;
 
-  // Ensure profile data is fetched when user is available
   useEffect(() => {
     if (!isSessionLoading && user) {
       fetchProfileData();
     }
   }, [user, isSessionLoading, fetchProfileData]);
-
 
   return (
     <Layout>
