@@ -9,8 +9,7 @@ interface LeaderboardEntry {
   first_name: string | null;
   last_name: string | null;
   balance: number; // Cash balance
-  total_portfolio_value: number;
-  total_stock_value: number; // New field for ranking based on stock value
+  total_portfolio_value: number; // Field for ranking based on total portfolio value
 }
 
 interface SupabaseBalanceRawEntry {
@@ -100,19 +99,17 @@ export const useLeaderboard = (): UseLeaderboardResult => {
 
       const rawLeaderboard = Array.from(userPortfolioValues.entries()).map(([userId, data]) => {
         const totalPortfolioValue = data.balance + data.stockValue;
-        const totalStockValue = data.stockValue; // Explicitly get stock value for ranking
         return {
           user_id: userId,
           first_name: data.firstName,
           last_name: data.lastName,
           balance: data.balance,
           total_portfolio_value: totalPortfolioValue,
-          total_stock_value: totalStockValue, // Include in the entry
         };
       });
 
-      // Sort by total_stock_value in descending order
-      rawLeaderboard.sort((a, b) => b.total_stock_value - a.total_stock_value);
+      // Sort by total_portfolio_value in descending order
+      rawLeaderboard.sort((a, b) => b.total_portfolio_value - a.total_portfolio_value);
 
       const finalLeaderboard = rawLeaderboard.map((entry, index) => ({
         ...entry,
