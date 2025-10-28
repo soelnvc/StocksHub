@@ -154,6 +154,8 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         }
 
         const totalPortfolioValue = userData.balance + totalStockValue;
+        console.log(`Leaderboard: User ${userData.firstName || 'Anonymous'} (${userId}) - Calculated Stock Value: ${totalStockValue.toFixed(2)}, Total Portfolio Value: ${totalPortfolioValue.toFixed(2)}`);
+
 
         rawLeaderboard.push({
           user_id: userId,
@@ -162,7 +164,6 @@ export const useLeaderboard = (): UseLeaderboardResult => {
           balance: userData.balance,
           total_portfolio_value: totalPortfolioValue,
         });
-        console.log(`Leaderboard: User ${userData.firstName || 'Anonymous'} (${userId}) - Final Calculated Portfolio Value: ${totalPortfolioValue.toFixed(2)}`);
       }
 
       // Sort by total_portfolio_value in descending order
