@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
-import { updateGamificationOnTrade } from "@/utils/gamification"; // Import the new utility
+import { updateGamificationOnTrade } from "@/utils/gamification";
+import { fetchStockPrice } from "@/lib/stock-api"; // Import fetchStockPrice
 
 interface UserStock {
   id: string;
@@ -14,6 +15,8 @@ interface UserStock {
 interface UseUserPortfolioResult {
   balance: number | null;
   userStocks: UserStock[];
+  totalStockValue: number; // New: Total current market value of all owned stocks
+  totalPortfolioValue: number; // New: Total stock value + cash balance
   isLoadingPortfolio: boolean;
   error: string | null;
   buyStock: (symbol: string, quantity: number, price: number) => Promise<boolean>;
@@ -25,8 +28,30 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
   const { user, isLoading: isSessionLoading } = useSession();
   const [balance, setBalance] = useState<number | null>(null);
   const [userStocks, setUserStocks] = useState<UserStock[]>([]);
+  const [totalStockValue, setTotalStockValue] = useState<number>(0);
+  const [totalPortfolioValue, setTotalPortfolioValue] = useState<number>(0);
   const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const calculatePortfolioValues = useCallback(async (currentStocks: UserStock[], currentBalance: number | null) => {
+    if (!currentStocks.length) {
+      setTotalStockValue(0);
+      setTotalPortfolioValue(currentBalance || 0);
+      return;
+    }
+
+    let calculatedStockValue = 0;
+    const fetchPromises = currentStocks.map(async (stock) => {
+      const priceData = await fetchStockPrice(stock.stock_symbol);
+      if (priceData) {
+        calculatedStockValue += priceData.price * stock.quantity;
+      }
+    });
+
+    await Promise.all(fetchPromises);
+    setTotalStockValue(calculatedStockValue);
+    setTotalPortfolioValue(calculatedStockValue + (currentBalance || 0));
+  }, []);
 
   const fetchPortfolio = useCallback(async () => {
     if (!user) {
@@ -46,7 +71,8 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
         .maybeSingle();
 
       if (balanceError) throw balanceError;
-      setBalance(balanceData?.balance || 0);
+      const currentBalance = balanceData?.balance || 0;
+      setBalance(currentBalance);
 
       // Fetch user stocks
       const { data: stocksData, error: stocksError } = await supabase
@@ -55,7 +81,11 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
         .eq("user_id", user.id);
 
       if (stocksError) throw stocksError;
-      setUserStocks(stocksData || []);
+      const currentUserStocks = stocksData || [];
+      setUserStocks(currentUserStocks);
+
+      // Calculate portfolio values
+      await calculatePortfolioValues(currentUserStocks, currentBalance);
 
     } catch (err: any) {
       console.error("Error fetching portfolio:", err.message);
@@ -64,13 +94,25 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     } finally {
       setIsLoadingPortfolio(false);
     }
-  }, [user]);
+  }, [user, calculatePortfolioValues]);
 
   useEffect(() => {
     if (!isSessionLoading && user) {
       fetchPortfolio();
     }
   }, [user, isSessionLoading, fetchPortfolio]);
+
+  // Optional: Refetch portfolio periodically to update stock values
+  useEffect(() => {
+    if (user && !isLoadingPortfolio) {
+      const interval = setInterval(() => {
+        fetchPortfolio();
+      }, 30000); // Refetch every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [user, isLoadingPortfolio, fetchPortfolio]);
+
 
   const buyStock = useCallback(async (symbol: string, quantity: number, price: number): Promise<boolean> => {
     if (!user || balance === null) {
@@ -231,5 +273,5 @@ export const useUserPortfolio = (): UseUserPortfolioResult => {
     }
   }, [user, balance, userStocks, fetchPortfolio]);
 
-  return { balance, userStocks, isLoadingPortfolio, error, buyStock, sellStock, fetchPortfolio };
+  return { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error, buyStock, sellStock, fetchPortfolio };
 };

@@ -3,10 +3,11 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, Flame } from "lucide-react";
+import { Wallet, Package, Award, TrendingUp } from "lucide-react"; // Removed Flame icon
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
+import { useProfileData } from "@/hooks/use-profile-data";
 import {
   Table,
   TableBody,
@@ -19,8 +20,9 @@ import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
-  const { balance, userStocks, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
-  const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
+  const { profile, isLoadingProfileData } = useProfileData();
+  const { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
+  const { xpData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification(); // Removed streakData
 
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,15 +63,45 @@ const Dashboard = () => {
     }
   }, [user, isSessionLoading, fetchPortfolio, fetchGamificationData]);
 
-  const displayLoading = isLoadingBalance || isLoadingPortfolio || isLoadingGamification;
+  const displayLoading = isLoadingBalance || isLoadingPortfolio || isLoadingGamification || isLoadingProfileData;
   const displayError = error || portfolioError || gamificationError;
+
+  const firstName = profile?.first_name || user?.user_metadata?.first_name || "Trader";
 
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center h-full text-center p-4">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-8">Dashboard</h1>
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
+          Welcome, {displayLoading ? <Skeleton className="inline-block h-8 w-32 align-middle" /> : firstName}!
+        </h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+          Your personalized overview of your StockSim journey.
+        </p>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full max-w-4xl mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full max-w-6xl mb-8">
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Total Portfolio Value
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {displayLoading ? (
+                <Skeleton className="h-10 w-3/4" />
+              ) : displayError ? (
+                <p className="text-red-500 text-2xl font-bold">{displayError}</p>
+              ) : (
+                <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                  ₹{totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Cash + Stock Holdings
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="bg-white dark:bg-gray-800 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -96,6 +128,29 @@ const Dashboard = () => {
           <Card className="bg-white dark:bg-gray-800 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Stock Holdings Value
+              </CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {displayLoading ? (
+                <Skeleton className="h-10 w-3/4" />
+              ) : displayError ? (
+                <p className="text-red-500 text-2xl font-bold">{displayError}</p>
+              ) : (
+                <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                  ₹{totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Current market value of your stocks.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 XP & Level
               </CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
@@ -113,30 +168,9 @@ const Dashboard = () => {
               </p>
             </CardContent>
           </Card>
-
-          <Card className="bg-white dark:bg-gray-800 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Trading Streak
-              </CardTitle>
-              <Flame className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              {displayLoading ? (
-                <Skeleton className="h-10 w-3/4" />
-              ) : (
-                <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {streakData?.current_streak || 0} Days
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Longest: {streakData?.longest_streak || 0} days
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
-        <Card className="w-full max-w-4xl bg-white dark:bg-gray-800 shadow-lg mb-8">
+        <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
               <Package className="h-5 w-5" />
@@ -160,6 +194,8 @@ const Dashboard = () => {
                       <TableHead className="w-[100px]">Symbol</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead className="text-right">Avg. Buy Price</TableHead>
+                      <TableHead className="text-right">Current Price</TableHead>
+                      <TableHead className="text-right">Current Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -170,6 +206,21 @@ const Dashboard = () => {
                         <TableCell className="text-right">
                           ₹{stock.average_buy_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {/* This will be updated by the useUserPortfolio hook's internal price fetching */}
+                          {isLoadingPortfolio ? (
+                            <Skeleton className="h-4 w-16 inline-block" />
+                          ) : (
+                            `₹${(totalStockValue / userStocks.reduce((sum, s) => sum + s.quantity, 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isLoadingPortfolio ? (
+                            <Skeleton className="h-4 w-20 inline-block" />
+                          ) : (
+                            `₹${(totalStockValue / userStocks.length).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -179,7 +230,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="w-full max-w-4xl bg-white dark:bg-gray-800 shadow-lg">
+        <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
               <Award className="h-5 w-5" />
@@ -188,7 +239,11 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             {displayLoading ? (
-              <Skeleton className="h-20 w-full" />
+              <div className="flex flex-wrap gap-2 justify-center">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-28" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
             ) : displayError ? (
               <p className="text-red-500 text-center py-4">{displayError}</p>
             ) : badges.length === 0 ? (
