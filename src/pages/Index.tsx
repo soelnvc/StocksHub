@@ -1,19 +1,28 @@
-// Update this page (the content is just a fallback if you fail to update the page)
-
+import { useSession } from "@/contexts/SessionContext";
+import { Navigate } from "react-router-dom";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">
-          Start building your amazing project here!
-        </p>
+  const { session, isLoading } = useSession();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-950">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4 text-gray-800 dark:text-white">Loading StockSim...</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            Preparing your virtual trading experience.
+          </p>
+        </div>
       </div>
-      <MadeWithDyad />
-    </div>
-  );
+    );
+  }
+
+  if (session) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
 };
 
 export default Index;
