@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, TrendingUp } from "lucide-react";
+import { Wallet, Package, Award, Flame, TrendingUp } from "lucide-react"; // Re-added Flame icon
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
@@ -22,7 +22,7 @@ const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { profile, isLoadingProfileData } = useProfileData();
   const { balance, userStocks, totalStockValue, totalPortfolioValue, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
-  const { xpData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
+  const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification(); // Re-added streakData
 
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,6 +169,28 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* New Card for Trading Streak */}
+        <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg mb-8">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <span>Trading Streak</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {displayLoading ? (
+              <Skeleton className="h-10 w-1/2 mx-auto" />
+            ) : (
+              <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                {streakData?.current_streak || 0} Days
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Longest streak: {streakData?.longest_streak || 0} days
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="w-full max-w-6xl bg-white dark:bg-gray-800 shadow-lg mb-8">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
