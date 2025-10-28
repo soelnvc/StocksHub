@@ -32,6 +32,8 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
         return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
       case '1y':
         return date.toLocaleDateString([], { year: 'numeric', month: 'short' });
+      case '10y':
+        return date.toLocaleDateString([], { year: 'numeric' }); // Only year for 10 years
       default:
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
@@ -53,6 +55,9 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
       case '1y':
         timeLabel = date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
         break;
+      case '10y':
+        timeLabel = date.toLocaleDateString([], { year: 'numeric', month: 'short' }); // Year and month for 10 years
+        break;
       default:
         timeLabel = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
@@ -69,6 +74,7 @@ const MarketChart: React.FC<MarketChartProps> = ({ title, data, isLoading, error
       case '1d': return "(Last Day)";
       case '1m': return "(Last Month)";
       case '1y': return "(Last Year)";
+      case '10y': return "(Last 10 Years)"; // Added '10y'
       default: return "";
     }
   };

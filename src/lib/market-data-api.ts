@@ -16,7 +16,7 @@ interface TopStock {
   change_percent: number;
 }
 
-export type TimeRange = '1h' | '10h' | '1d' | '1m' | '1y'; // Added '10h'
+export type TimeRange = '1h' | '10h' | '1d' | '1m' | '1y' | '10y'; // Added '10y'
 
 const initialIndexValues: { [key: string]: number } = {
   NIFTY50: 22500.00,
@@ -78,6 +78,11 @@ const generateHistoryForRange = (baseValue: number, range: TimeRange): { timesta
       numPoints = 12; // 12 months (simplified to 12 points for a year)
       intervalMs = 30 * 24 * 60 * 60 * 1000; // ~1 month
       volatility = 0.02; // Even larger fluctuations
+      break;
+    case '10y':
+      numPoints = 10; // 10 points, one per year
+      intervalMs = 365 * 24 * 60 * 60 * 1000; // ~1 year
+      volatility = 0.05; // Very large fluctuations for long term
       break;
     default:
       numPoints = 60;

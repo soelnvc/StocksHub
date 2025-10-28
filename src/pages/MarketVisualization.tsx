@@ -41,10 +41,11 @@ const MarketVisualization = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1h">Last 1 Hour</SelectItem>
-                <SelectItem value="10h">Last 10 Hours</SelectItem> {/* New item */}
+                <SelectItem value="10h">Last 10 Hours</SelectItem>
                 <SelectItem value="1d">Last 1 Day</SelectItem>
                 <SelectItem value="1m">Last 1 Month</SelectItem>
                 <SelectItem value="1y">Last 1 Year</SelectItem>
+                <SelectItem value="10y">Last 10 Years</SelectItem> {/* New item */}
               </SelectContent>
             </Select>
           </div>
