@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -12,7 +11,7 @@ import Leaderboard from "./pages/Leaderboard";
 import AIMentor from "./pages/AIMentor";
 import Profile from "./pages/Profile";
 import Trade from "./pages/Trade";
-import TransactionHistory from "./pages/TransactionHistory"; // Import the new TransactionHistory page
+import TransactionHistory from "./pages/TransactionHistory";
 import { SessionContextProvider } from "./contexts/SessionContext";
 import AuthGuard from "./components/AuthGuard";
 
@@ -35,7 +34,7 @@ const App = () => (
               <Route path="/ai-mentor" element={<AIMentor />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/trade" element={<Trade />} />
-              <Route path="/transactions" element={<TransactionHistory />} /> {/* Add the new TransactionHistory route */}
+              <Route path="/transactions" element={<TransactionHistory />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

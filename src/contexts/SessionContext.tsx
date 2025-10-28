@@ -17,7 +17,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      async (_event, currentSession) => { // Changed 'event' to '_event'
         setSession(currentSession);
         setUser(currentSession?.user || null);
         setIsLoading(false);

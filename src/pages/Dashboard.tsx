@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Wallet, Package, Award, Flame, TrendingUp } from "lucide-react"; // Added new icons
+import { Wallet, Package, Award, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
-import { useGamification } from "@/hooks/use-gamification"; // Import the new hook
+import { useGamification } from "@/hooks/use-gamification";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge"; // Import Badge component
+import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
@@ -35,7 +35,7 @@ const Dashboard = () => {
       setIsLoadingBalance(true);
       setError(null);
       try {
-        const { data, error: supabaseError } = await supabase
+        const { data: _data, error: supabaseError } = await supabase
           .from("user_balances")
           .select("balance")
           .eq("user_id", user.id)
@@ -57,7 +57,7 @@ const Dashboard = () => {
     if (!isSessionLoading && user) {
       fetchInitialBalance();
       fetchPortfolio();
-      fetchGamificationData(); // Fetch gamification data
+      fetchGamificationData();
     }
   }, [user, isSessionLoading, fetchPortfolio, fetchGamificationData]);
 

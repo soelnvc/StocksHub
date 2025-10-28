@@ -1,6 +1,6 @@
 import { useSession } from "@/contexts/SessionContext";
 import { Navigate } from "react-router-dom";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+// Removed: import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
   const { session, isLoading } = useSession();

@@ -1,11 +1,10 @@
-import React from "react";
 import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Mail, DollarSign } from "lucide-react";
+import { Mail, DollarSign } from "lucide-react";
 
 const Profile = () => {
   const { user, isLoading: isSessionLoading } = useSession();
