@@ -58,18 +58,17 @@ const Leaderboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[60px]">Rank</TableHead>
-                      <TableHead>Trader (Total Portfolio Value)</TableHead> {/* Updated header */}
+                      <TableHead>Name</TableHead>
+                      <TableHead className="text-right">Total Portfolio Value</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {leaderboard.map((entry) => (
                       <TableRow key={entry.user_id}>
                         <TableCell className="font-medium">{entry.rank}</TableCell>
-                        <TableCell>
-                          <span className="font-semibold">
-                            {formatCurrency(entry.total_portfolio_value)}
-                          </span>{" "}
-                          - {entry.first_name || "Anonymous"} {entry.last_name}
+                        <TableCell>{entry.first_name || "Anonymous"} {entry.last_name}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(entry.total_portfolio_value)}
                         </TableCell>
                       </TableRow>
                     ))}
