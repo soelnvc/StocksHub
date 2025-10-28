@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react"; // Removed useState as it's no longer used
 import Layout from "@/components/Layout";
 import { useSession } from "@/contexts/SessionContext";
-import { supabase } from "@/integrations/supabase/client";
+// Removed: import { supabase } from "@/integrations/supabase/client"; // No longer directly used in this component
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Package, Award, Flame, History } from "lucide-react"; // Import History icon
+import { Wallet, Package, Award, Flame, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserPortfolio } from "@/hooks/use-user-portfolio";
 import { useGamification } from "@/hooks/use-gamification";
-import { useTransactions } from "@/hooks/use-transactions"; // Import useTransactions hook
+import { useTransactions } from "@/hooks/use-transactions";
 import {
   Table,
   TableBody,
@@ -22,52 +22,20 @@ const Dashboard = () => {
   const { user, isLoading: isSessionLoading } = useSession();
   const { balance, userStocks, isLoadingPortfolio, error: portfolioError, fetchPortfolio } = useUserPortfolio();
   const { xpData, streakData, badges, isLoadingGamification, error: gamificationError, fetchGamificationData } = useGamification();
-  const { transactions, isLoadingTransactions, error: transactionsError, fetchTransactions } = useTransactions(); // Use transactions hook
-
-  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { transactions, isLoadingTransactions, error: transactionsError, fetchTransactions } = useTransactions();
 
   useEffect(() => {
-    const fetchInitialBalance = async () => {
-      if (!user) {
-        setIsLoadingBalance(false);
-        return;
-      }
-
-      setIsLoadingBalance(true);
-      setError(null);
-      try {
-        const { data: _data, error: supabaseError } = await supabase
-          .from("user_balances")
-          .select("balance")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (supabaseError) {
-          console.error("Supabase error fetching balance:", supabaseError.message);
-          setError(`Failed to load balance: ${supabaseError.message}`);
-          return;
-        }
-      } catch (err: any) {
-        console.error("Unexpected error fetching balance:", err.message);
-        setError("Failed to load balance due to an unexpected error.");
-      } finally {
-        setIsLoadingBalance(false);
-      }
-    };
-
     if (!isSessionLoading && user) {
-      fetchInitialBalance();
       fetchPortfolio();
       fetchGamificationData();
-      fetchTransactions(); // Fetch transactions on mount
+      fetchTransactions();
     }
   }, [user, isSessionLoading, fetchPortfolio, fetchGamificationData, fetchTransactions]);
 
-  const displayLoading = isLoadingBalance || isLoadingPortfolio || isLoadingGamification || isLoadingTransactions;
-  const displayError = error || portfolioError || gamificationError || transactionsError;
+  const displayLoading = isLoadingPortfolio || isLoadingGamification || isLoadingTransactions;
+  const displayError = portfolioError || gamificationError || transactionsError;
 
-  const recentTransactions = transactions.slice(0, 5); // Show only the 5 most recent transactions
+  const recentTransactions = transactions.slice(0, 5);
 
   return (
     <Layout>
@@ -196,7 +164,7 @@ const Dashboard = () => {
               <div className="p-4 space-y-2">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-1/2" />
               </div>
             ) : displayError ? (
               <p className="text-red-500 text-center py-4">{displayError}</p>
