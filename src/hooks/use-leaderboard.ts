@@ -10,14 +10,14 @@ interface LeaderboardEntry {
   balance: number;
 }
 
-// Corrected interface: 'profiles' is an array of objects
+// Corrected interface based on TypeScript error message
 interface SupabaseLeaderboardRawEntry {
   user_id: string;
   balance: number;
-  profiles: Array<{
+  profiles: { // This is now an array of profile objects
     first_name: string | null;
     last_name: string | null;
-  }> | null;
+  }[] | null;
 }
 
 interface UseLeaderboardResult {
@@ -54,7 +54,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
       const sortedLeaderboard: LeaderboardEntry[] = (data as SupabaseLeaderboardRawEntry[] || []).map((entry, index) => ({
         rank: index + 1,
         user_id: entry.user_id,
-        // Access the first element of the profiles array
+        // Access first_name and last_name from the first element of the profiles array
         first_name: entry.profiles?.[0]?.first_name || null,
         last_name: entry.profiles?.[0]?.last_name || null,
         balance: entry.balance,
