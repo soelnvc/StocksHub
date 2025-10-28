@@ -3,9 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
 import { fetchTopStocks, TopStock } from "@/lib/market-data-api"; // Import fetchTopStocks and TopStock
 
-// Define the initial balance for all users as per the handle_new_user function
-const TOTAL_INITIAL_BALANCE = 100000.00;
-
 interface LeaderboardEntry {
   rank: number;
   user_id: string;
@@ -13,7 +10,17 @@ interface LeaderboardEntry {
   last_name: string | null;
   balance: number; // Cash balance
   total_portfolio_value: number;
-  total_profit_made: number; // New field for ranking based on profit
+  total_portfolio_profit_loss: number; // New field for ranking based on total P/L
+}
+
+// New intermediate interface without the 'rank' property
+interface IntermediateLeaderboardEntry {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  balance: number;
+  total_portfolio_value: number;
+  total_portfolio_profit_loss: number;
 }
 
 interface SupabaseBalanceRawEntry {
@@ -29,6 +36,7 @@ interface SupabaseUserStockRawEntry {
   user_id: string;
   stock_symbol: string;
   quantity: number;
+  average_buy_price: number; // Added to fetch average buy price
 }
 
 interface UseLeaderboardResult {
@@ -53,7 +61,7 @@ export const useLeaderboard = (): UseLeaderboardResult => {
         allCurrentStocks
       ] = await Promise.all([
         supabase.from("user_balances").select(`user_id, balance, profiles (first_name, last_name)`),
-        supabase.from("user_stocks").select(`user_id, stock_symbol, quantity`),
+        supabase.from("user_stocks").select(`user_id, stock_symbol, quantity, average_buy_price`), // Fetch average_buy_price
         fetchTopStocks()
       ]);
 
@@ -63,62 +71,88 @@ export const useLeaderboard = (): UseLeaderboardResult => {
       const stockPricesMap = new Map<string, number>();
       allCurrentStocks.forEach((stock: TopStock) => stockPricesMap.set(stock.symbol, stock.price));
 
-      const userPortfolioValues = new Map<string, {
+      const userHoldingsMap = new Map<string, {
         balance: number;
-        stockValue: number;
+        stocks: {
+          stock_symbol: string;
+          quantity: number;
+          average_buy_price: number;
+        }[];
         firstName: string | null;
         lastName: string | null;
       }>();
 
+      // Initialize with balance and profile data
       (balancesData as SupabaseBalanceRawEntry[] || []).forEach(entry => {
         const userId = entry.user_id;
         const firstName = entry.profiles?.[0]?.first_name || null;
         const lastName = entry.profiles?.[0]?.last_name || null;
-        userPortfolioValues.set(userId, {
+        userHoldingsMap.set(userId, {
           balance: entry.balance,
-          stockValue: 0,
+          stocks: [],
           firstName,
           lastName
         });
       });
 
+      // Add stock holdings to each user
       (stocksData as SupabaseUserStockRawEntry[] || []).forEach(stockHolding => {
         const userId = stockHolding.user_id;
-        const currentPrice = stockPricesMap.get(stockHolding.stock_symbol) || 0;
-        const stockValue = currentPrice * stockHolding.quantity;
-
-        if (userPortfolioValues.has(userId)) {
-          const current = userPortfolioValues.get(userId)!;
-          current.stockValue += stockValue;
-          userPortfolioValues.set(userId, current);
+        if (userHoldingsMap.has(userId)) {
+          const userEntry = userHoldingsMap.get(userId)!;
+          userEntry.stocks.push({
+            stock_symbol: stockHolding.stock_symbol,
+            quantity: stockHolding.quantity,
+            average_buy_price: stockHolding.average_buy_price
+          });
+          userHoldingsMap.set(userId, userEntry);
         } else {
           // This case should ideally not happen if all users have a balance entry
-          userPortfolioValues.set(userId, {
-            balance: 0, // Default to 0 if no balance entry found
-            stockValue: stockValue,
+          userHoldingsMap.set(userId, {
+            balance: 0,
+            stocks: [{
+              stock_symbol: stockHolding.stock_symbol,
+              quantity: stockHolding.quantity,
+              average_buy_price: stockHolding.average_buy_price
+            }],
             firstName: null,
             lastName: null
           });
         }
       });
 
-      const rawLeaderboard = Array.from(userPortfolioValues.entries()).map(([userId, data]) => {
-        const totalPortfolioValue = data.balance + data.stockValue;
-        const totalProfitMade = totalPortfolioValue - TOTAL_INITIAL_BALANCE; // Calculate profit
-        return {
+      const rawLeaderboard: IntermediateLeaderboardEntry[] = []; // Use the intermediate interface here
+
+      for (const [userId, userData] of userHoldingsMap.entries()) {
+        let totalStockValue = 0;
+        let totalPortfolioProfitLoss = 0;
+
+        for (const stock of userData.stocks) {
+          const currentPrice = stockPricesMap.get(stock.stock_symbol) || 0;
+          const currentValue = currentPrice * stock.quantity;
+          const totalBuyCost = stock.average_buy_price * stock.quantity;
+          const profitLossForStock = currentValue - totalBuyCost;
+
+          totalStockValue += currentValue;
+          totalPortfolioProfitLoss += profitLossForStock;
+        }
+
+        const totalPortfolioValue = userData.balance + totalStockValue;
+
+        rawLeaderboard.push({
           user_id: userId,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          balance: data.balance,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          balance: userData.balance,
           total_portfolio_value: totalPortfolioValue,
-          total_profit_made: totalProfitMade, // Include profit in the entry
-        };
-      });
+          total_portfolio_profit_loss: totalPortfolioProfitLoss, // Include total P/L
+        });
+      }
 
-      // Sort by total_profit_made in descending order
-      rawLeaderboard.sort((a, b) => b.total_profit_made - a.total_profit_made);
+      // Sort by total_portfolio_profit_loss in descending order
+      rawLeaderboard.sort((a, b) => b.total_portfolio_profit_loss - a.total_portfolio_profit_loss);
 
-      const finalLeaderboard = rawLeaderboard.map((entry, index) => ({
+      const finalLeaderboard: LeaderboardEntry[] = rawLeaderboard.map((entry, index) => ({
         ...entry,
         rank: index + 1,
       }));
