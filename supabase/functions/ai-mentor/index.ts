@@ -47,7 +47,8 @@ serve(async (req: Request) => {
     if (GEMINI_API_KEY) {
       console.log("AI Mentor: GEMINI_API_KEY found. Attempting to call Gemini API.");
       try {
-        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+        // Changed v1beta to v1 in the API endpoint
+        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
