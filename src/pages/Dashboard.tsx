@@ -22,26 +22,28 @@ const Dashboard = () => {
       setIsLoadingBalance(true);
       setError(null);
       try {
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from("user_balances")
           .select("balance")
           .eq("user_id", user.id)
           .single();
 
-        if (error) {
-          throw error;
+        if (supabaseError) {
+          console.error("Supabase error fetching balance:", supabaseError.message);
+          setError(`Failed to load balance: ${supabaseError.message}`);
+          return;
         }
 
         if (data) {
           setBalance(data.balance);
         } else {
-          // If no balance found, it might be a new user before the trigger fires, or an issue.
-          // For now, we'll assume the trigger will handle it, or display a default/error.
-          setBalance(0); // Or handle as a specific "no balance found" state
+          // If no balance found (data is null and no supabaseError), it means no record exists.
+          // This can happen for users who signed up before the trigger was updated.
+          setBalance(0); 
         }
       } catch (err: any) {
-        console.error("Error fetching balance:", err.message);
-        setError("Failed to load balance.");
+        console.error("Unexpected error fetching balance:", err.message);
+        setError("Failed to load balance due to an unexpected error.");
       } finally {
         setIsLoadingBalance(false);
       }
